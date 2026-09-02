@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${editing} ? 'Edit Armor' : 'New Armor'">Armor Form</title>
+</head>
+<body>
+<div layout:fragment="content" class="max-w-5xl">
+    <h1 class="text-2xl font-bold font-display mb-4" th:text="${editing} ? 'Edit Armor' : 'New Armor'">Armor Form</h1>
+    <div th:if="${error}" class="alert alert-error mb-4" th:text="${error}">Error</div>
+
+    <div th:classappend="${editing} ? 'grid grid-cols-1 lg:grid-cols-2 gap-6 items-start' : ''">
+        <form th:action="${editing} ? @{/armor/{id}(id=${form.id})} : @{/armor}" method="post" class="flex flex-col gap-6">
+            <input th:if="${editing}" type="hidden" name="_method" value="PUT"/>
+            <div class="card bg-base-100 border-2 border-base-300 rounded-box">
+                <div class="card-body gap-3">
+                    <h2 class="text-lg font-semibold font-display">Identity</h2>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">ID</span></div>
+                        <input type="text" name="id" th:value="${form.id}" th:readonly="${editing}" required="required" th:classappend="${fieldErrors != null and fieldErrors.containsKey('id')} ? 'input-error'" class="input input-bordered w-full max-w-md font-mono"/>
+                        <div th:replace="~{fragments/field-error :: error('id')}"></div>
+                    </label>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">Material</span></div>
+                        <input type="text" name="material" th:value="${form.material}" required="required" th:classappend="${fieldErrors != null and fieldErrors.containsKey('material')} ? 'input-error'" class="input input-bordered w-full max-w-md font-mono"/>
+                        <div th:replace="~{fragments/field-error :: error('material')}"></div>
+                    </label>
+                    <label class="form-control w-full max-w-md">
+                        <div class="label"><span class="label-text">Slot</span></div>
+                        <select name="slot" class="select select-bordered w-full">
+                            <option th:each="s : ${T(java.util.List).of('HELMET','CHESTPLATE','LEGGINGS','BOOTS')}"
+                                    th:value="${s}" th:text="${s}" th:selected="${s == form.slot}">HELMET
+                            </option>
+                        </select>
+                    </label>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">Armor Asset ID (optional - defaults to the armor's own ID)</span></div>
+                        <input type="text" name="armorAssetId" th:value="${form.armorAssetId}" th:classappend="${fieldErrors != null and fieldErrors.containsKey('armorAssetId')} ? 'input-error'" class="input input-bordered w-full max-w-md font-mono"/>
+                        <div th:replace="~{fragments/field-error :: error('armorAssetId')}"></div>
+                    </label>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">Display Name</span></div>
+                        <input type="text" name="displayName" th:value="${form.displayName}" required="required" th:classappend="${fieldErrors != null and fieldErrors.containsKey('displayName')} ? 'input-error'" class="input input-bordered w-full max-w-md"/>
+                        <div th:replace="~{fragments/field-error :: error('displayName')}"></div>
+                    </label>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">Lore (one line each)</span></div>
+                        <textarea name="loreText" th:text="${form.loreText}" class="textarea textarea-bordered w-full max-w-md"></textarea>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary self-start" th:text="${editing} ? 'Save Changes' : 'Create Armor'">Save</button>
+        </form>
+
+        <div id="armor-texture-upload" th:if="${editing}" class="flex flex-col gap-6">
+            <div th:replace="~{fragments/texture-panel :: panel(
+                     key='armor-icon',
+                     title='Inventory Icon',
+                     badge='16x16 (optional)',
+                     help='Falls back to the vanilla icon if left empty.',
+                     uploadUrl=@{/armor/{id}/icon(id=${form.id})},
+                     loadUrl=@{/armor/{id}/icon(id=${form.id})},
+                     docWidth=16, docHeight=16, uvOverlay=null,
+                     editorTitle='Inventory icon',
+                     editorSubtitle=${form.id},
+                     studioUrl=@{/studio(type='armor-icon',id=${form.id})},
+                     previewKind='item')}"></div>
+
+            <div th:replace="~{fragments/texture-panel :: panel(
+                     key='armor-layer1',
+                     title='Body Texture',
+                     badge='64x32 (exact)',
+                     help='Helmet/Chestplate/Boots, shared across every piece using Asset ID '
+                           + ${form.armorAssetId} + ' - upload once from any piece in the set and all of them update together.',
+                     uploadUrl=@{/armor/{id}/texture(id=${form.id},layer='humanoid')},
+                     loadUrl=@{/armor/{id}/texture(id=${form.id},layer='humanoid')},
+                     docWidth=64, docHeight=32, uvOverlay='humanoid',
+                     editorTitle='Body texture (layer 1)',
+                     editorSubtitle='Asset ID ' + ${form.armorAssetId} + ' - shared by the whole set',
+                     studioUrl=@{/studio(type='armor-layer',id=${form.id},layer='humanoid')},
+                     previewKind='humanoid')}"></div>
+
+            <div th:replace="~{fragments/texture-panel :: panel(
+                     key='armor-layer2',
+                     title='Leggings Texture',
+                     badge='64x32 (exact)',
+                     help='Separate from the body texture above. Also shared across every piece using Asset ID '
+                           + ${form.armorAssetId} + '.',
+                     uploadUrl=@{/armor/{id}/texture(id=${form.id},layer='humanoid_leggings')},
+                     loadUrl=@{/armor/{id}/texture(id=${form.id},layer='humanoid_leggings')},
+                     docWidth=64, docHeight=32, uvOverlay='humanoid_leggings',
+                     editorTitle='Leggings texture (layer 2)',
+                     editorSubtitle='Asset ID ' + ${form.armorAssetId} + ' - shared by the whole set',
+                     studioUrl=@{/studio(type='armor-layer',id=${form.id},layer='humanoid_leggings')},
+                     previewKind='humanoid_leggings')}"></div>
+        </div>
+    </div>
+
+    <!-- These are only the DEFINITIONS of the fragments ArmorController returns by
+         name; htmx swaps them into the panel's #armor-*-upload-status. Rendered
+         inline here they are always empty on GET, because the attributes are not
+         set yet. -->
+    <div th:fragment="icon-upload-status">
+        <div th:if="${iconMessage}" class="alert alert-success" th:text="${iconMessage}"></div>
+        <div th:if="${iconError}" class="alert alert-error" th:text="${iconError}"></div>
+    </div>
+    <div th:fragment="layer1-upload-status">
+        <div th:if="${layer1Message}" class="alert alert-success" th:text="${layer1Message}"></div>
+        <div th:if="${layer1Error}" class="alert alert-error" th:text="${layer1Error}"></div>
+    </div>
+    <div th:fragment="layer2-upload-status">
+        <div th:if="${layer2Message}" class="alert alert-success" th:text="${layer2Message}"></div>
+        <div th:if="${layer2Error}" class="alert alert-error" th:text="${layer2Error}"></div>
+    </div>
+
+    <div th:if="${editing}" th:replace="~{fragments/studio-modal :: modal}"></div>
+</div>
+</body>
+</html>

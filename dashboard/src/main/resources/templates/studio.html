@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="'Studio - ' + ${studioTitle}">Studio</title>
+</head>
+<body>
+<!-- fullBleed makes <main> drop its padding and take all remaining height (see
+     layout/base.html) -- the Studio needs the whole viewport. -->
+<div layout:fragment="content" class="flex min-h-0 flex-1 flex-col">
+    <div data-studio-page
+         class="flex min-h-0 flex-1 flex-col"
+         th:attr="data-studio-width=${docWidth},
+                  data-studio-height=${docHeight},
+                  data-studio-load-url=${loadUrl},
+                  data-studio-sibling-load-url=${siblingLoadUrl},
+                  data-studio-upload-url=${uploadUrl},
+                  data-studio-uv-overlay=${uvOverlay},
+                  data-studio-preview-kind=${previewKind},
+                  data-studio-back-url=${backUrl},
+                  data-studio-draft-key=${draftKey},
+                  data-studio-download-name=${downloadName},
+                  data-studio-title=${studioTitle},
+                  data-studio-subtitle=${studioSubtitle}">
+        <div th:replace="~{fragments/studio-workspace :: workspace}"></div>
+    </div>
+    <div th:replace="~{fragments/studio-workspace :: reference-dialog}"></div>
+    <div th:replace="~{fragments/studio-workspace :: confirm-dialog}"></div>
+</div>
+</body>
+</html>

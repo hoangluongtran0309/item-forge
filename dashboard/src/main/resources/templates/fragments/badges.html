@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="ability-type-badge(type)">
+    <span th:switch="${type}">
+        <span th:case="'POTION_EFFECT'" class="badge badge-success" th:text="${type}">POTION_EFFECT</span>
+        <span th:case="'DAMAGE_BONUS'" class="badge badge-error" th:text="${type}">DAMAGE_BONUS</span>
+        <span th:case="*" class="badge badge-ghost" th:text="${type}">UNKNOWN</span>
+    </span>
+</th:block>
+
+<th:block th:fragment="trigger-badge(trigger)">
+    <span th:switch="${trigger}">
+        <span th:case="'RIGHT_CLICK'" class="badge badge-info badge-outline" th:text="${trigger}">RIGHT_CLICK</span>
+        <span th:case="'LEFT_CLICK'" class="badge badge-accent badge-outline" th:text="${trigger}">LEFT_CLICK</span>
+        <span th:case="'ON_HIT'" class="badge badge-warning badge-outline" th:text="${trigger}">ON_HIT</span>
+        <span th:case="'ON_KILL'" class="badge badge-error badge-outline" th:text="${trigger}">ON_KILL</span>
+        <span th:case="'ON_CONSUME'" class="badge badge-secondary badge-outline" th:text="${trigger}">ON_CONSUME</span>
+        <span th:case="*" class="badge badge-ghost badge-outline" th:text="${trigger}">UNKNOWN</span>
+    </span>
+</th:block>
+
+<th:block th:fragment="severity-badge(severity)">
+    <span th:switch="${severity}">
+        <span th:case="'CRITICAL'" class="badge badge-error" th:text="${severity}">CRITICAL</span>
+        <span th:case="'WARNING'" class="badge badge-warning" th:text="${severity}">WARNING</span>
+        <span th:case="'INFO'" class="badge badge-info badge-outline" th:text="${severity}">INFO</span>
+        <span th:case="*" class="badge badge-ghost" th:text="${severity}">UNKNOWN</span>
+    </span>
+</th:block>
+
+<th:block th:fragment="finding-source-badge(source)">
+    <span th:switch="${source}">
+        <span th:case="'AI'" class="badge badge-secondary badge-outline badge-sm">AI</span>
+        <span th:case="*" class="badge badge-ghost badge-outline badge-sm">Rule</span>
+    </span>
+</th:block>
+
+<th:block th:fragment="recipe-type-badge(type)">
+    <span th:switch="${type}">
+        <span th:case="'SHAPED'" class="badge badge-primary" th:text="${type}">SHAPED</span>
+        <span th:case="'SHAPELESS'" class="badge badge-neutral" th:text="${type}">SHAPELESS</span>
+        <span th:case="*" class="badge badge-ghost" th:text="${type}">UNKNOWN</span>
+    </span>
+</th:block>
+</body>
+</html>

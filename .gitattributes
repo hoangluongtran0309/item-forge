@@ -1,0 +1,16 @@
+# Git for Windows defaults to core.autocrlf=true, which rewrites checked-out
+# files to CRLF. bash cannot run a script whose lines end in CRLF -- it fails on
+# the very first line with "$'\r': command not found" -- so every shell script
+# has to keep LF endings regardless of the platform it is checked out on.
+*.sh text eol=lf
+mvnw text eol=lf
+
+# The Windows counterparts are the exact opposite: batch interpreters need CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Never apply line-ending conversion to binary assets. The example textures in
+# particular would be silently corrupted by it.
+*.png binary
+*.jar binary
+*.zip binary

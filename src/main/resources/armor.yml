@@ -1,0 +1,45 @@
+# Sample armor set. Two different textures are involved per piece:
+#
+#   textures/armor/<id>.png                      the flat icon in the inventory and in hand
+#   textures/armor/<armor-asset-id>_layer_1.png  the 64x32 texture worn on the body
+#   textures/armor/<armor-asset-id>_layer_2.png  the 64x32 leggings overlay (optional)
+#
+# armor-asset-id is optional and defaults to the piece's own id. All four pieces below
+# share one asset id so a single pair of worn layers covers the whole set.
+# The matching PNGs ship in examples/textures/armor/ of the ItemForge repository.
+armor:
+  void_helmet:
+    material: NETHERITE_HELMET
+    slot: HELMET
+    armor-asset-id: void_armor
+    custom-model-data: 4001
+    display-name: "&5Void Netherite Helmet"
+    lore:
+      - "&7Forged from netherite that fell through the void."
+
+  void_chestplate:
+    material: NETHERITE_CHESTPLATE
+    slot: CHESTPLATE
+    armor-asset-id: void_armor
+    custom-model-data: 4002
+    display-name: "&5Void Netherite Chestplate"
+    lore:
+      - "&7Forged from netherite that fell through the void."
+
+  void_leggings:
+    material: NETHERITE_LEGGINGS
+    slot: LEGGINGS
+    armor-asset-id: void_armor
+    custom-model-data: 4003
+    display-name: "&5Void Netherite Leggings"
+    lore:
+      - "&7Forged from netherite that fell through the void."
+
+  void_boots:
+    material: NETHERITE_BOOTS
+    slot: BOOTS
+    armor-asset-id: void_armor
+    custom-model-data: 4004
+    display-name: "&5Void Netherite Boots"
+    lore:
+      - "&7Forged from netherite that fell through the void."

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  One shared texture panel, replacing the five copy-pasted versions that came before
+  (item x1, armor x3, block x1).
+
+  Every id is derived from `key` and matches EXACTLY the ids the existing htmx wiring
+  already used, so no controller had to change:
+      <key>-drop-zone, <key>-file-input, <key>-upload-btn,
+      <key>-preview-img, <key>-upload-spinner, <key>-upload-status
+
+  The status container here is deliberately left empty: the controllers return each
+  page's OWN status fragment by name ("items/form :: texture-upload-status",
+  "armor/form :: layer1-upload-status", ...) and htmx swaps it in as innerHTML. So the
+  panel cannot own that fragment -- each page keeps its own small block.
+-->
+<div th:fragment="panel(key, title, badge, help, uploadUrl, loadUrl, docWidth, docHeight, uvOverlay, editorTitle, editorSubtitle, studioUrl, previewKind)"
+     th:id="${key} + '-panel'" class="if-panel">
+    <div class="card-body gap-3 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="font-display text-base font-semibold" th:text="${title}">Texture</h3>
+            <span class="badge badge-outline font-mono" th:text="${badge}">16x16</span>
+        </div>
+        <p th:if="${help}" class="text-sm text-base-content/70" th:text="${help}"></p>
+
+        <div class="flex items-start gap-3">
+            <!-- The image currently stored on the server, shown as soon as the page
+                 opens. The previous version only showed the file just picked
+                 locally, so there was no way to see what the server actually
+                 held. -->
+            <div th:replace="~{fragments/texture-thumb :: thumb(
+                     url=${loadUrl},
+                     sizeClass='w-20 h-20 text-lg',
+                     fallbackLetter='?')}"></div>
+            <div class="min-w-0 flex-1">
+                <div th:id="${key} + '-drop-zone'"
+                     class="rounded-lg border-2 border-dashed border-base-300 p-4 text-center text-sm
+                            transition-colors hover:border-primary"
+                     data-texture-drop
+                     th:attr="data-input-id=${key} + '-file-input', data-preview-img-id=${key} + '-preview-img'">
+                    Drag &amp; drop a PNG here, or
+                    <input type="file" name="file" th:id="${key} + '-file-input'" accept="image/png"
+                           class="file-input file-input-bordered file-input-sm mt-2"
+                           data-texture-file="true"
+                           th:attr="data-preview-img-id=${key} + '-preview-img'"/>
+                </div>
+                <img th:id="${key} + '-preview-img'" class="image-pixelated mt-2" style="display:none;max-width:96px;"
+                     alt="Selected file preview"/>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Every dynamic hx-* attribute is set through a SINGLE th:attr: the
+                 project has htmx-spring-boot-thymeleaf but uses the hx: dialect
+                 nowhere, and th:hx-* is not valid Thymeleaf syntax. -->
+            <button type="button" class="btn btn-primary btn-sm"
+                    th:id="${key} + '-upload-btn'"
+                    hx-encoding="multipart/form-data"
+                    hx-swap="innerHTML"
+                    hx-disabled-elt="this"
+                    th:attr="hx-post=${uploadUrl},
+                             hx-include='#' + ${key} + '-file-input',
+                             hx-target='#' + ${key} + '-upload-status',
+                             hx-indicator='#' + ${key} + '-upload-spinner'">
+                Upload
+            </button>
+            <span th:id="${key} + '-upload-spinner'" class="htmx-indicator loading loading-spinner loading-sm"></span>
+
+            <span class="text-sm text-base-content/50">or</span>
+            <!-- data-studio-* plus one delegated listener in studio/main.js: the Studio
+                 is an ES module and creates no global, so an inline onclick="..."
+                 can no longer reach it. -->
+            <button type="button" class="btn btn-outline btn-sm"
+                    data-studio-open
+                    th:attr="data-studio-width=${docWidth},
+                             data-studio-height=${docHeight},
+                             data-studio-load-url=${loadUrl},
+                             data-studio-uv-overlay=${uvOverlay},
+                             data-studio-preview-kind=${previewKind},
+                             data-studio-title=${editorTitle},
+                             data-studio-subtitle=${editorSubtitle},
+                             data-studio-input-id=${key} + '-file-input',
+                             data-studio-upload-btn-id=${key} + '-upload-btn',
+                             data-studio-preview-img-id=${key} + '-preview-img',
+                             data-studio-status-id=${key} + '-upload-status',
+                             data-studio-draft-key=${key} + ':' + ${uploadUrl},
+                             data-studio-download-name=${key}">
+                &#9998; Draw it yourself
+            </button>
+            <a th:if="${studioUrl}" th:href="${studioUrl}" class="btn btn-ghost btn-sm"
+               title="Open the full-page Studio (deep-linkable, has the 3D preview)">
+                Open in Studio &rarr;
+            </a>
+        </div>
+
+        <div th:id="${key} + '-upload-status'"></div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  The shared texture cell used by every grid. The GET texture endpoint returns 404 when
+  an entity has no texture yet (a deliberate contract of ItemController/ArmorController/
+  BlockController), so the <img> errors and dashboard.js swaps in the placeholder letter.
+  No inline onerror: 'error' does not bubble, so dashboard.js listens in the capture phase
+  on document -- one listener for the whole page.
+-->
+<!-- sizeClass carries both the size AND the font size (e.g. 'w-16 h-16 text-xl'):
+     leaving a default text-* here and appending another text-* would make the result
+     depend on the order inside the built CSS file, not the order passed in. -->
+<div th:fragment="thumb(url, sizeClass, fallbackLetter)" th:classappend="${sizeClass}" class="if-slot">
+    <img class="h-full w-full object-contain" th:src="${url}" data-thumb-fallback="true" alt=""/>
+    <span class="thumb-fallback hidden" th:text="${fallbackLetter}">M</span>
+</div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+# Optional Docker deployment for ItemForge. Java-only remains the primary,
+# supported way to run the plugin (see README.md) -- this compose file is an
+# alternative for admins who prefer Docker. Run via ./install.sh, which
+# generates .env and server-data/plugins/ItemForge/config.yml before this
+# file is ever used.
+#
+# MC_VERSION is intentionally never hardcoded here -- it must come from .env
+# so admins on a different Minecraft version aren't stuck with a pinned one.
+
+services:
+  paper-server:
+    image: itzg/minecraft-server:latest
+    environment:
+      EULA: ${EULA}
+      TYPE: PAPER
+      VERSION: ${MC_VERSION}
+    ports:
+      # Minecraft client connections.
+      - "${MC_PORT}:25565"
+      # Resource-pack download server (plugin's PackHttpServer) -- real MC
+      # clients fetch this directly over the internet/LAN, so it must be
+      # published, unlike the dashboard-api port below.
+      - "${RESOURCE_PACK_PORT}:${RESOURCE_PACK_PORT}"
+    volumes:
+      # The ':z' suffix tells Docker to relabel these paths for container access.
+      # Without it, on any SELinux-enforcing host (Fedora, RHEL, CentOS) the
+      # directories keep their user_home_t label, the container cannot even write
+      # /data/eula.txt, and Paper crash-loops with "Permission denied".
+      - ./itemforge.jar:/data/plugins/ItemForge.jar:ro,z
+      - ./server-data:/data:z
+    networks: [itemforge-net]
+    restart: unless-stopped
+
+  itemforge-dashboard:
+    build:
+      context: ./dashboard
+    environment:
+      # Reach the plugin by its service name over the internal Docker
+      # network, never via localhost -- these are two separate containers.
+      ITEMFORGE_API_BASE_URL: http://paper-server:${DASHBOARD_API_PORT}
+      ITEMFORGE_API_TOKEN: ${ITEMFORGE_API_TOKEN}
+      DASHBOARD_ADMIN_USERNAME: ${DASHBOARD_ADMIN_USERNAME}
+      DASHBOARD_ADMIN_PASSWORD_HASH: ${DASHBOARD_ADMIN_PASSWORD_HASH}
+      # The reference texture library admins import through the UI, which can
+      # run to hundreds of MB. The dashboard's own default lives under the
+      # container's $HOME, meaning it is wiped every time the container is
+      # recreated (`up --build`) -- so point it at the volume below.
+      ITEMFORGE_REFERENCE_DIR: /data/reference
+    ports:
+      - "${DASHBOARD_PORT}:8090"
+    volumes:
+      # ':z' for the same SELinux reason as paper-server above.
+      - ./dashboard-data:/data:z
+    depends_on: [paper-server]
+    networks: [itemforge-net]
+    restart: unless-stopped
+
+# dashboard-api (plugin-side REST API, default port 8081) is deliberately
+# absent from paper-server's `ports:` -- containers on itemforge-net reach
+# each other on any container port without publishing, so it stays internal
+# to the Docker network by construction, never exposed to the host/internet.
+
+networks:
+  itemforge-net:
+    driver: bridge

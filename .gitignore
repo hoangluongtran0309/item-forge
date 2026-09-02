@@ -1,0 +1,68 @@
+**.class
+target/
+
+HELP.md
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+# Excludes for npm
+node_modules
+node
+
+# Log output from local tooling (e.g. ttcli) -- never contains anything worth
+# committing, only personal paths/noise.
+*.log
+
+# Claude Code's local configuration. settings.local.json can accumulate real
+# secrets from local testing (API tokens, bcrypt hashes used against a dev
+# server) inside its Bash permission allow-list, and the rest is per-machine
+# tooling state rather than anything a contributor needs.
+/.claude/
+
+### Docker deployment (install.sh / docker-compose.yml) ###
+# .env holds real secrets (API token, bcrypt hash) and must never be committed.
+.env
+# A copy of the jar for the container to mount -- not an artifact worth storing.
+/itemforge.jar
+# World and config of the Paper server running under Docker, including the
+# config.yml that carries the real token.
+/server-data/
+# Dashboard container data: the reference texture library an admin imported
+# (their resource packs, not assets belonging to this project).
+/dashboard-data/
+
+### Internal working documents ###
+# Architecture notes, coding standards and test plans, plus the CLAUDE.md that
+# indexes them. Kept local: they describe how the project is built rather than
+# how it is used, and README.md is the entry point for anyone cloning the repo.
+/docs/
+/CLAUDE.md

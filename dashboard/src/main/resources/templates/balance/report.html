@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Balance</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="mb-5 flex flex-wrap items-center gap-3">
+        <div class="min-w-0 flex-1">
+            <h1 class="font-display text-2xl font-bold">Balance</h1>
+            <p class="itemforge-tech-label">Gameplay balance analysis of every registered item</p>
+        </div>
+
+        <form th:action="@{/balance/refresh}" method="post" class="flex flex-wrap items-center gap-2"
+              th:attr="hx-post=@{/balance/refresh}"
+              hx-target="#report-body" hx-swap="outerHTML" hx-indicator="#analyze-spinner">
+            <input type="text" name="target" th:value="${target}"
+                   class="input input-bordered input-sm w-full sm:w-56"
+                   placeholder="All items, or one id"/>
+            <button type="submit" class="btn btn-primary btn-sm">Re-run analysis</button>
+            <span id="analyze-spinner" class="htmx-indicator loading loading-spinner loading-sm"></span>
+        </form>
+    </div>
+
+    <!-- Only the DEFINITION of the fragment BalanceController returns by name after a
+         re-run; the whole block is rendered inline on a normal page load. -->
+    <div id="report-body" th:fragment="report-body">
+        <!-- Rendered here rather than through the layout's #error-banner, because the
+             re-run swaps this fragment in on its own and would otherwise fail silently.
+             The attribute is deliberately not named errorBanner: that one belongs to the
+             layout, and setting it would draw a second banner on a full page load. -->
+        <div th:if="${reportError}" class="alert alert-error mb-6" th:text="${reportError}">Error</div>
+
+        <div th:unless="${report.aiEnabled()}" class="alert alert-info mb-6">
+            <span>
+                Showing rule-based findings only. Set <code class="font-mono">ai.enabled: true</code> in the
+                plugin's <code class="font-mono">config.yml</code> to have an AI review the config as well.
+            </span>
+        </div>
+
+        <div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div class="if-panel">
+                <div class="card-body gap-1 p-5">
+                    <span class="itemforge-tech-label uppercase">Findings</span>
+                    <span class="font-display text-4xl font-bold leading-none tabular-nums"
+                          th:text="${report.findings().size()}">0</span>
+                </div>
+            </div>
+            <div class="if-panel">
+                <div class="card-body gap-1 p-5">
+                    <span class="itemforge-tech-label uppercase">Critical</span>
+                    <span class="font-display text-4xl font-bold leading-none tabular-nums text-error"
+                          th:text="${report.countOf('CRITICAL')}">0</span>
+                </div>
+            </div>
+            <div class="if-panel">
+                <div class="card-body gap-1 p-5">
+                    <span class="itemforge-tech-label uppercase">Warning</span>
+                    <span class="font-display text-4xl font-bold leading-none tabular-nums text-warning"
+                          th:text="${report.countOf('WARNING')}">0</span>
+                </div>
+            </div>
+            <div class="if-panel">
+                <div class="card-body gap-1 p-5">
+                    <span class="itemforge-tech-label uppercase">Info</span>
+                    <span class="font-display text-4xl font-bold leading-none tabular-nums text-info"
+                          th:text="${report.countOf('INFO')}">0</span>
+                </div>
+            </div>
+        </div>
+
+        <p th:if="${!#strings.isEmpty(report.summary())}" class="mb-5 text-base-content/70"
+           th:text="${report.summary()}">Summary</p>
+
+        <div th:if="${report.findings().isEmpty()}" class="py-16 text-center text-base-content/60">
+            Nothing to report. Every registered item looks balanced against the rules.
+        </div>
+
+        <div th:unless="${report.findings().isEmpty()}" class="flex flex-col gap-3">
+            <div th:each="finding : ${report.findings()}"
+                 class="rounded-box border-2 border-base-300 bg-base-100 p-4 shadow-sm">
+                <div class="mb-2 flex flex-wrap items-center gap-2">
+                    <span th:insert="~{fragments/badges :: severity-badge(severity=${finding.severity()})}">INFO</span>
+                    <span class="itemforge-tech-label" th:text="${finding.targetId()}">id</span>
+                    <span th:insert="~{fragments/badges :: finding-source-badge(source=${finding.source()})}">Rule</span>
+                    <span th:if="${!#strings.isEmpty(finding.rule())}"
+                          class="font-mono text-xs text-base-content/50" th:text="${finding.rule()}">RULE_NAME</span>
+                </div>
+                <p th:text="${finding.issue()}">What is wrong.</p>
+                <p th:if="${!#strings.isEmpty(finding.suggestion())}"
+                   class="mt-1 text-sm text-base-content/70"
+                   th:text="'&rarr; ' + ${finding.suggestion()}">Suggestion</p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

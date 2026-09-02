@@ -1,0 +1,123 @@
+@import '@fontsource/inter/latin-ext-400.css';
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/vietnamese-400.css';
+@import '@fontsource/inter/latin-ext-500.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/inter/vietnamese-500.css';
+@import '@fontsource/inter/latin-ext-600.css';
+@import '@fontsource/inter/latin-600.css';
+@import '@fontsource/inter/vietnamese-600.css';
+@import '@fontsource/space-grotesk/latin-ext-500.css';
+@import '@fontsource/space-grotesk/latin-500.css';
+@import '@fontsource/space-grotesk/vietnamese-500.css';
+@import '@fontsource/space-grotesk/latin-ext-700.css';
+@import '@fontsource/space-grotesk/latin-700.css';
+@import '@fontsource/space-grotesk/vietnamese-700.css';
+@import '@fontsource/jetbrains-mono/latin-ext-400.css';
+@import '@fontsource/jetbrains-mono/latin-400.css';
+@import '@fontsource/jetbrains-mono/vietnamese-400.css';
+@import '@fontsource/jetbrains-mono/latin-ext-500.css';
+@import '@fontsource/jetbrains-mono/latin-500.css';
+@import '@fontsource/jetbrains-mono/vietnamese-500.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    /* The checkerboard square colors follow the theme; --if-checker-size lets each
+       place pick its own square size (a zoomed-in canvas needs bigger squares than
+       a 16px thumbnail). daisyUI sets data-theme on <html>. */
+    :root {
+        --if-checker: rgb(255 255 255 / 0.06);
+        --if-checker-size: 8px;
+    }
+
+    [data-theme='itemforge-light'] {
+        --if-checker: rgb(0 0 0 / 0.08);
+    }
+}
+
+@layer components {
+    /* Not done through Tailwind utilities: backgroundImage/Size/Position all
+       generate the "bg-" prefix, so three keys with the same name overwrite each
+       other. */
+    .if-checkerboard {
+        background-image:
+            linear-gradient(45deg, var(--if-checker) 25%, transparent 25%),
+            linear-gradient(-45deg, var(--if-checker) 25%, transparent 25%),
+            linear-gradient(45deg, transparent 75%, var(--if-checker) 75%),
+            linear-gradient(-45deg, transparent 75%, var(--if-checker) 75%);
+        background-size: calc(var(--if-checker-size) * 2) calc(var(--if-checker-size) * 2);
+        background-position: 0 0, 0 var(--if-checker-size),
+            var(--if-checker-size) calc(var(--if-checker-size) * -1),
+            calc(var(--if-checker-size) * -1) 0;
+    }
+
+    /* Positioning and visibility are handled by daisyUI's "drawer lg:drawer-open";
+       this class only handles the appearance and width of the panel inside
+       .drawer-side. */
+    .if-sidebar {
+        @apply flex h-full min-h-full w-64 flex-col border-r border-base-300 bg-base-100;
+    }
+
+    .if-panel {
+        @apply card bg-base-100 border border-base-300 rounded-box shadow-sm;
+    }
+
+    /* The texture cell. A checkerboard background so transparent pixels are not
+       mistaken for white, and pixelated so it is not blurred when scaled up. */
+    .if-slot {
+        @apply if-checkerboard flex items-center justify-center shrink-0
+        overflow-hidden rounded border border-base-300 bg-base-200
+        font-display font-bold shadow-inset-slot;
+        image-rendering: pixelated;
+    }
+
+    /* A button in the vertical tool rail. A fixed size keeps the rail's width even,
+       and square keeps the icon centred. */
+    .if-toolbtn {
+        @apply btn btn-ghost btn-sm btn-square h-9 w-9 min-h-0 text-base
+        text-base-content/70 hover:text-base-content;
+    }
+
+    .if-toolbtn-active {
+        @apply bg-primary/20 text-primary hover:text-primary;
+    }
+
+    /* A palette swatch -- a checkerboard background so colors with alpha read as
+       partly transparent. The actual color is set inline as background-color by JS. */
+    .if-swatch {
+        @apply if-checkerboard w-6 h-6 rounded-sm border border-base-content/20
+        cursor-pointer;
+        --if-checker-size: 4px;
+    }
+}
+
+@layer utilities {
+    /* htmx toggles the "htmx-request" class on the element that triggered
+       the request while it is in flight - used for inline loading spinners
+       next to AI-generate / texture-upload buttons. */
+    .htmx-indicator {
+        display: none;
+    }
+
+    .htmx-request .htmx-indicator {
+        display: inline-flex;
+    }
+
+    .image-pixelated {
+        image-rendering: pixelated;
+    }
+
+    /* An alias kept for templates not yet migrated to .if-slot. The GET texture
+       endpoints now exist, so this cell shows a real image rather than a decorative
+       placeholder -- .if-slot is the version to use from here on. */
+    .itemforge-slot {
+        @apply if-slot border-2;
+    }
+
+    .itemforge-tech-label {
+        @apply font-mono text-xs tracking-tight opacity-70;
+    }
+}

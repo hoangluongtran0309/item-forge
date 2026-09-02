@@ -1,0 +1,76 @@
+name: Bug report
+description: Something in ItemForge isn't working as expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Exact commands run / YAML config used / in-game actions taken.
+    validations:
+      required: true
+
+  - type: input
+    id: paper-version
+    attributes:
+      label: Paper version
+      description: Output of `/version` on the server (e.g. "1.21.11-132-c5eb079").
+    validations:
+      required: true
+
+  - type: input
+    id: java-version
+    attributes:
+      label: Java version
+      description: Output of `java -version`.
+    validations:
+      required: true
+
+  - type: input
+    id: itemforge-version
+    attributes:
+      label: ItemForge version
+      description: The plugin jar version (e.g. "1.0.0").
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected area
+      multiple: true
+      options:
+        - Items (items.yml / abilities)
+        - Armor (armor.yml)
+        - Recipes (recipes.yml)
+        - Custom blocks (blocks.yml)
+        - Resource pack generation/hosting
+        - AI item generation (/itemforge generate)
+        - Web dashboard
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Paste the relevant section of `logs/latest.log`, not the whole file. It will be rendered as a code block automatically.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant config
+      description: The specific `items.yml`/`armor.yml`/`recipes.yml`/`blocks.yml`/`config.yml` entries involved (redact any real API keys/tokens first).
+      render: yaml

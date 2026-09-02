@@ -1,0 +1,63 @@
+name: Feature request
+description: Suggest a capability ItemForge does not have yet
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: Describe the situation on your server that ItemForge cannot handle today, not the solution you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like ItemForge to do?
+      description: If it involves configuration, sketch the YAML you would expect to write.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      multiple: true
+      options:
+        - Items (items.yml / abilities)
+        - Armor (armor.yml)
+        - Recipes (recipes.yml)
+        - Custom blocks (blocks.yml)
+        - Resource pack generation/hosting
+        - AI item generation (/itemforge generate)
+        - Web dashboard
+        - Commands / permissions
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: paper-version
+    attributes:
+      label: Paper version
+      description: The version you run, so version-specific rendering behaviour can be taken into account (e.g. "1.21.11").
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds you have tried
+      description: Anything that gets you part of the way there today, including other plugins.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked the README and the existing issues, and this has not been requested yet
+          required: true
+        - label: I checked the "Known gaps" section of CHANGELOG.md — this is not an already-documented gap
+          required: true

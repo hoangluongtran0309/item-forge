@@ -1,0 +1,50 @@
+server:
+  port: 8090
+
+spring:
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true # required for PUT via the hidden _method form field
+  thymeleaf:
+    cache: false # flip to true for production packaging; false lets template edits show up without restarting
+  servlet:
+    multipart:
+      # Enough for a real resource pack (imported into the reference library).
+      # Texture uploads are still capped separately by the plugin at
+      # dashboard-api.max-upload-bytes (2 MiB by default), and
+      # ReferenceLibraryProperties caps the uncompressed size on its own -- the
+      # limit here only covers the HTTP layer.
+      max-file-size: 128MB
+      max-request-size: 128MB
+
+itemforge:
+  api:
+    base-url: ${ITEMFORGE_API_BASE_URL:http://localhost:8082}
+    # Must match the plugin's dashboard-api.api-key. The placeholder is
+    # uppercase to stay consistent with the CHANGE_ME convention used
+    # everywhere else in the project -- see the startup warning in
+    # RestClientConfig.
+    token: ${ITEMFORGE_API_TOKEN:CHANGE_ME}
+
+  # The reference texture library admins import themselves. ItemForge does NOT
+  # bundle or download any Minecraft asset -- admins upload resource packs they
+  # already own, and those stay on this machine only.
+  reference:
+    dir: ${ITEMFORGE_REFERENCE_DIR:${user.home}/.itemforge-dashboard/reference}
+    max-total-bytes: 268435456 # 256 MiB once uncompressed, guards against zip bombs
+    max-entry-bytes: 4194304   # 4 MiB per file
+    max-entries: 20000
+
+dashboard:
+  admin:
+    username: ${DASHBOARD_ADMIN_USERNAME:admin}
+    # MUST be a real BCrypt hash in production, never a plaintext password.
+    # Generate one with any of these (install.sh picks whichever is available):
+    #   htpasswd -inBC 10 "" <<< '<password>' | tr -d ':\n'
+    #   docker run --rm -i httpd:2.4-alpine htpasswd -inBC 10 "" <<< '<password>' | tr -d ':\n'
+    #   python3 -c 'import bcrypt;print(bcrypt.hashpw(b"<password>",bcrypt.gensalt(10)).decode())'
+    # $2a$, $2b$ and $2y$ prefixes are all accepted.
+    # The placeholder below is NOT a valid hash on purpose - login fails loudly
+    # until DASHBOARD_ADMIN_PASSWORD_HASH is set, instead of shipping a guessable default.
+    password-hash: ${DASHBOARD_ADMIN_PASSWORD_HASH:CHANGE_ME_SET_A_REAL_BCRYPT_HASH}

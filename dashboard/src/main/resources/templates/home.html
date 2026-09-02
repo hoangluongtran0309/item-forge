@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Overview</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="mb-6">
+        <h1 class="font-display text-3xl font-bold">Overview</h1>
+        <p class="mt-1 text-base-content/70">Manage custom items, armor, recipes, and blocks without editing YAML by
+            hand.</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <th:block th:replace="~{fragments/stat-card :: card('Items', ${itemCount}, @{/items}, 'text-primary')}"/>
+        <th:block th:replace="~{fragments/stat-card :: card('Armor', ${armorCount}, @{/armor}, 'text-secondary')}"/>
+        <th:block th:replace="~{fragments/stat-card :: card('Blocks', ${blockCount}, @{/blocks}, 'text-accent')}"/>
+        <th:block th:replace="~{fragments/stat-card :: card('Recipes', ${recipeCount}, @{/recipes}, 'text-info')}"/>
+    </div>
+
+    <div class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <section class="if-panel">
+            <div class="card-body gap-3 p-5">
+                <div class="flex items-baseline justify-between gap-2">
+                    <h2 class="font-display text-lg font-semibold">Recent items</h2>
+                    <a th:href="@{/items}" class="btn btn-ghost btn-xs">View all</a>
+                </div>
+                <p th:if="${#lists.isEmpty(recentItems)}" class="py-6 text-center text-sm text-base-content/60">
+                    No items yet.
+                </p>
+                <ul class="flex flex-col divide-y divide-base-300">
+                    <li th:each="item : ${recentItems}" class="flex items-center gap-3 py-2">
+                        <div th:replace="~{fragments/texture-thumb :: thumb(
+                                 url=@{/items/{id}/texture(id=${item.id()})},
+                                 sizeClass='w-10 h-10 text-sm',
+                                 fallbackLetter=${#strings.substring(item.material(), 0, 1)})}"></div>
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate font-medium" th:text="${item.displayName()}">Display Name</p>
+                            <p class="itemforge-tech-label truncate" th:text="${item.id()}">id</p>
+                        </div>
+                        <a th:href="@{/items/{id}/edit(id=${item.id()})}" class="btn btn-ghost btn-xs">Edit</a>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="if-panel">
+            <div class="card-body gap-3 p-5">
+                <div class="flex items-baseline justify-between gap-2">
+                    <h2 class="font-display text-lg font-semibold">Recent blocks</h2>
+                    <a th:href="@{/blocks}" class="btn btn-ghost btn-xs">View all</a>
+                </div>
+                <p th:if="${#lists.isEmpty(recentBlocks)}" class="py-6 text-center text-sm text-base-content/60">
+                    No custom blocks yet.
+                </p>
+                <ul class="flex flex-col divide-y divide-base-300">
+                    <li th:each="block : ${recentBlocks}" class="flex items-center gap-3 py-2">
+                        <div th:replace="~{fragments/texture-thumb :: thumb(
+                                 url=@{/blocks/{id}/texture(id=${block.id()})},
+                                 sizeClass='w-10 h-10 text-sm',
+                                 fallbackLetter=${#strings.substring(block.displayName(), 0, 1)})}"></div>
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate font-medium" th:text="${block.displayName()}">Display Name</p>
+                            <p class="itemforge-tech-label truncate"
+                               th:text="${block.instrument()} + ' · note ' + ${block.note()}">INSTRUMENT · note 0</p>
+                        </div>
+                        <a th:href="@{/blocks/{id}/edit(id=${block.id()})}" class="btn btn-ghost btn-xs">Edit</a>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </div>
+</div>
+</body>
+</html>

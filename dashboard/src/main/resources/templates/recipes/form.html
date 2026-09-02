@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${editing} ? 'Edit Recipe' : 'New Recipe'">Recipe Form</title>
+</head>
+<body>
+<div layout:fragment="content" class="max-w-3xl">
+    <h1 class="text-2xl font-bold font-display mb-4" th:text="${editing} ? 'Edit Recipe' : 'New Recipe'">Recipe Form</h1>
+    <div th:if="${error}" class="alert alert-error mb-4" th:text="${error}">Error</div>
+
+    <form th:action="${editing} ? @{/recipes/{id}(id=${form.id})} : @{/recipes}" method="post" class="flex flex-col gap-6">
+        <input th:if="${editing}" type="hidden" name="_method" value="PUT"/>
+
+        <div class="card bg-base-100 border-2 border-base-300 rounded-box">
+            <div class="card-body gap-3">
+                <h2 class="text-lg font-semibold font-display">Recipe</h2>
+                <label class="form-control w-full">
+                    <div class="label"><span class="label-text">ID</span></div>
+                    <input type="text" name="id" th:value="${form.id}" th:readonly="${editing}" required="required" th:classappend="${fieldErrors != null and fieldErrors.containsKey('id')} ? 'input-error'" class="input input-bordered w-full max-w-md font-mono"/>
+                    <div th:replace="~{fragments/field-error :: error('id')}"></div>
+                </label>
+                <label class="form-control w-full max-w-md">
+                    <div class="label"><span class="label-text">Type</span></div>
+                    <select name="type" onchange="toggleRecipeType(this)" class="select select-bordered w-full">
+                        <option value="SHAPED" th:selected="${form.type == 'SHAPED'}">Shaped</option>
+                        <option value="SHAPELESS" th:selected="${form.type == 'SHAPELESS'}">Shapeless</option>
+                    </select>
+                </label>
+                <label class="form-control w-full">
+                    <div class="label"><span class="label-text">Result item/armor ID</span></div>
+                    <input type="text" name="result" th:value="${form.result}" required="required" th:classappend="${fieldErrors != null and fieldErrors.containsKey('result')} ? 'input-error'" class="input input-bordered w-full max-w-md font-mono"/>
+                    <div th:replace="~{fragments/field-error :: error('result')}"></div>
+                </label>
+                <label class="form-control w-full">
+                    <div class="label"><span class="label-text">Result Count</span></div>
+                    <input type="number" name="resultCount" th:value="${form.resultCount}" min="1" th:classappend="${fieldErrors != null and fieldErrors.containsKey('resultCount')} ? 'input-error'" class="input input-bordered w-full max-w-md font-mono"/>
+                    <div th:replace="~{fragments/field-error :: error('resultCount')}"></div>
+                </label>
+            </div>
+        </div>
+
+        <div id="shape-lines-section" th:hidden="${form.type != 'SHAPED'}" class="if-panel">
+            <div class="card-body gap-3">
+                <h2 class="text-lg font-semibold font-display">Shape</h2>
+                <p class="text-sm text-base-content/70">One character per slot, matching a Key in Ingredients below.
+                    Leave a slot empty for nothing.</p>
+
+                <!-- The real 3x3 grid. These cells are NOT submitted directly:
+                     dashboard.js assembles them into the three shapeLines[0..2]
+                     strings in the hidden inputs below, so RecipeForm and
+                     RecipeFormMapper needed no changes. -->
+                <div id="shape-grid" class="grid w-fit grid-cols-3 gap-1 rounded-box bg-base-200 p-2">
+                    <input th:each="cell : ${#numbers.sequence(0, 8)}"
+                           type="text" maxlength="1"
+                           th:attr="data-shape-cell=${cell}"
+                           th:aria-label="'Slot ' + (${cell} + 1)"
+                           class="if-slot h-12 w-12 border-2 bg-base-100 text-center font-mono text-lg"/>
+                </div>
+
+                <input type="hidden" name="shapeLines[0]" th:value="${form.shapeLines[0]}" data-shape-line="0"/>
+                <input type="hidden" name="shapeLines[1]" th:value="${form.shapeLines[1]}" data-shape-line="1"/>
+                <input type="hidden" name="shapeLines[2]" th:value="${form.shapeLines[2]}" data-shape-line="2"/>
+            </div>
+        </div>
+
+        <div class="card bg-base-100 border-2 border-base-300 rounded-box">
+            <div class="card-body gap-3">
+                <h2 class="text-lg font-semibold font-display">Ingredients</h2>
+                <p class="text-sm text-base-content/70">For a Shaped recipe, "Key" is the single character used in the
+                    shape grid above. It is ignored for Shapeless recipes.</p>
+                <div id="ingredients-list" th:fragment="ingredients-list(form)" class="flex flex-col gap-3">
+                    <div class="ingredient-row card bg-base-200 border border-base-300 p-3 flex-row flex-wrap gap-2 items-end"
+                         th:each="ingredient, it : ${form.ingredients}">
+                        <label class="form-control w-20">
+                            <div class="label py-0"><span class="label-text">Key</span></div>
+                            <input type="text" th:name="|ingredients[${it.index}].key|" th:value="${ingredient.key}"
+                                   maxlength="1" class="input input-bordered input-sm w-full font-mono"/>
+                        </label>
+                        <label class="form-control flex-1 min-w-[10rem]">
+                            <div class="label py-0"><span class="label-text">Item/Armor ID</span></div>
+                            <input type="text" th:name="|ingredients[${it.index}].itemId|" th:value="${ingredient.itemId}"
+                                   class="input input-bordered input-sm w-full font-mono"/>
+                        </label>
+                        <button type="button"
+                                class="btn btn-error btn-outline btn-xs"
+                                th:attr="hx-post=@{/recipes/ingredients/remove-row(index=${it.index})}"
+                                hx-include="closest form" hx-target="#ingredients-list" hx-swap="outerHTML">
+                            Remove
+                        </button>
+                    </div>
+
+                    <button type="button"
+                            class="btn btn-outline btn-sm self-start"
+                            th:attr="hx-post=@{/recipes/ingredients/add-row}"
+                            hx-include="closest form" hx-target="#ingredients-list" hx-swap="outerHTML">
+                        + Add ingredient
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary self-start" th:text="${editing} ? 'Save Changes' : 'Create Recipe'">Save</button>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Recipes</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="mb-5 flex flex-wrap items-center gap-3">
+        <div class="min-w-0 flex-1">
+            <h1 class="font-display text-2xl font-bold">Recipes</h1>
+            <p class="itemforge-tech-label" th:text="${recipes.size()} + ' registered'">0 registered</p>
+        </div>
+        <input type="search" class="input input-bordered input-sm w-full sm:w-56"
+               placeholder="Filter by id, type, result" data-filter-target="#recipes-body"/>
+        <a th:href="@{/recipes/new}" class="btn btn-primary btn-sm">+ New Recipe</a>
+    </div>
+
+    <div th:if="${recipes.isEmpty()}" class="text-center py-16 text-base-content/60">
+        No recipes yet. Create your first one to get started.
+    </div>
+
+    <div th:unless="${recipes.isEmpty()}"
+         class="overflow-x-auto bg-base-100 border-2 border-base-300 rounded-box shadow-sm">
+        <table class="table table-zebra">
+            <thead>
+            <tr class="font-mono text-xs uppercase tracking-wide">
+                <th>ID</th>
+                <th>Type</th>
+                <th>Result</th>
+                <th>Count</th>
+                <th class="text-right">Actions</th>
+            </tr>
+            </thead>
+            <tbody id="recipes-body">
+            <tr th:each="recipe : ${recipes}"
+                th:attr="data-filter-text=${#strings.toLowerCase(recipe.id() + ' ' + recipe.type() + ' ' + recipe.result())}">
+                <td class="itemforge-tech-label" th:text="${recipe.id()}">id</td>
+                <td th:insert="~{fragments/badges :: recipe-type-badge(type=${recipe.type()})}">SHAPED</td>
+                <td th:text="${recipe.result()}">result</td>
+                <td th:text="${recipe.resultCount()}">1</td>
+                <td class="text-right">
+                    <a th:href="@{/recipes/{id}/edit(id=${recipe.id()})}" class="btn btn-ghost btn-xs">Edit</a>
+                    <button type="button"
+                            class="btn btn-error btn-outline btn-xs"
+                            th:attr="hx-delete=@{/recipes/{id}(id=${recipe.id()})}"
+                            hx-target="closest tr" hx-swap="outerHTML swap:200ms"
+                            hx-confirm="Delete this recipe? This cannot be undone.">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="filter-empty-state" hidden="hidden" class="py-12 text-center text-base-content/60">
+        Nothing matches that filter.
+    </div>
+</div>
+</body>
+</html>

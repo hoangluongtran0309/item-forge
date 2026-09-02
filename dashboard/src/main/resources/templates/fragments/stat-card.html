@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  A statistic card on the Overview page. `accentClass` must be passed in as a COMPLETE
+  class string ('text-primary', not 'primary'): Tailwind scans the source with a regex
+  looking for class candidates, so a class assembled from pieces ('text-' + x) would be
+  purged from the built CSS.
+-->
+<a th:fragment="card(label, count, href, accentClass)"
+   th:href="${href}" class="if-panel group transition-colors hover:border-primary/60">
+    <div class="card-body gap-1 p-5">
+        <span class="itemforge-tech-label uppercase" th:text="${label}">Items</span>
+        <span class="font-display text-4xl font-bold leading-none tabular-nums"
+              th:classappend="${accentClass}" th:text="${count}">0</span>
+        <span class="text-xs text-base-content/50 opacity-60 transition-opacity group-hover:opacity-100">
+            Manage &rarr;
+        </span>
+    </div>
+</a>
+</body>
+</html>

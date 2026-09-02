@@ -1,0 +1,67 @@
+version: 2
+
+# Everything targets develop: main only ever moves through a reviewed release
+# PR, so dependency bumps must not land there directly.
+updates:
+  - package-ecosystem: maven
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    labels: [dependencies, plugin]
+    ignore:
+      # Pinned deliberately: paper-api 1.21.4 is the version MockBukkit 4.45.1
+      # targets, and the two have to move together. See the note in pom.xml.
+      - dependency-name: io.papermc.paper:paper-api
+      - dependency-name: org.mockbukkit.mockbukkit:mockbukkit-v1.21
+
+  - package-ecosystem: maven
+    directory: /dashboard
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    labels: [dependencies, dashboard]
+
+  - package-ecosystem: npm
+    directory: /dashboard
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    labels: [dependencies, dashboard]
+    groups:
+      # These only ever move together and produce nothing but noise apart.
+      frontend-build:
+        patterns:
+          - '@babel/*'
+          - postcss*
+          - autoprefixer
+          - cssnano
+          - tailwindcss
+          - '@tailwindcss/*'
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    labels: [dependencies, ci]

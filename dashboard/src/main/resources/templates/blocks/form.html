@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${editing} ? 'Edit Custom Block' : 'New Custom Block'">Custom Block Form</title>
+</head>
+<body>
+<div layout:fragment="content" class="max-w-5xl">
+    <h1 class="text-2xl font-bold font-display mb-4" th:text="${editing} ? 'Edit Custom Block' : 'New Custom Block'">Custom Block Form</h1>
+    <div th:if="${error}" class="alert alert-error mb-4" th:text="${error}">Error</div>
+
+    <div th:classappend="${editing} ? 'grid grid-cols-1 lg:grid-cols-2 gap-6 items-start' : ''">
+        <form th:action="${editing} ? @{/blocks/{id}(id=${form.id})} : @{/blocks}" method="post" class="flex flex-col gap-6">
+            <input th:if="${editing}" type="hidden" name="_method" value="PUT"/>
+            <div class="card bg-base-100 border-2 border-base-300 rounded-box">
+                <div class="card-body gap-3">
+                    <h2 class="text-lg font-semibold font-display">Identity</h2>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">ID</span></div>
+                        <input type="text" name="id" th:value="${form.id}" th:readonly="${editing}" required="required" th:classappend="${fieldErrors != null and fieldErrors.containsKey('id')} ? 'input-error'" class="input input-bordered w-full max-w-md font-mono"/>
+                        <div th:replace="~{fragments/field-error :: error('id')}"></div>
+                    </label>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">Instrument</span></div>
+                        <input type="text" name="instrument" th:value="${form.instrument}" required="required"
+                               placeholder="e.g. BASS_GUITAR"
+                               th:classappend="${fieldErrors != null and fieldErrors.containsKey('instrument')} ? 'input-error'"
+                               class="input input-bordered w-full max-w-md font-mono"/>
+                        <div th:replace="~{fragments/field-error :: error('instrument')}"></div>
+                    </label>
+                    <label class="form-control w-full max-w-md">
+                        <div class="label"><span class="label-text">Note (0-24)</span></div>
+                        <input type="number" name="note" th:value="${form.note}" min="0" max="24" required="required"
+                               th:classappend="${fieldErrors != null and fieldErrors.containsKey('note')} ? 'input-error'"
+                               class="input input-bordered w-full font-mono"/>
+                        <div th:replace="~{fragments/field-error :: error('note')}"></div>
+                    </label>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">Texture ID</span></div>
+                        <input type="text" name="textureId" th:value="${form.textureId}" required="required" th:classappend="${fieldErrors != null and fieldErrors.containsKey('textureId')} ? 'input-error'" class="input input-bordered w-full max-w-md font-mono"/>
+                        <div th:replace="~{fragments/field-error :: error('textureId')}"></div>
+                    </label>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">Drop Item ID (a registered item id or a vanilla Material)</span></div>
+                        <input type="text" name="dropItemId" th:value="${form.dropItemId}" required="required" th:classappend="${fieldErrors != null and fieldErrors.containsKey('dropItemId')} ? 'input-error'" class="input input-bordered w-full max-w-md font-mono"/>
+                        <div th:replace="~{fragments/field-error :: error('dropItemId')}"></div>
+                    </label>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">Custom Model Data (optional - auto-assigned if left blank)</span></div>
+                        <input type="number" name="customModelData" th:value="${form.customModelData}" class="input input-bordered w-full max-w-md font-mono"/>
+                    </label>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">Display Name</span></div>
+                        <input type="text" name="displayName" th:value="${form.displayName}" required="required" th:classappend="${fieldErrors != null and fieldErrors.containsKey('displayName')} ? 'input-error'" class="input input-bordered w-full max-w-md"/>
+                        <div th:replace="~{fragments/field-error :: error('displayName')}"></div>
+                    </label>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">Lore (one line each)</span></div>
+                        <textarea name="loreText" th:text="${form.loreText}" class="textarea textarea-bordered w-full max-w-md"></textarea>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary self-start" th:text="${editing} ? 'Save Changes' : 'Create Custom Block'">Save</button>
+        </form>
+
+        <div th:if="${editing}" th:replace="~{fragments/texture-panel :: panel(
+                 key='block-texture',
+                 title='Texture',
+                 badge='square, x16 (16, 32, 64...)',
+                 help='Applies to all six faces of the in-world block and to the held item icon alike, keyed by the Texture ID above.',
+                 uploadUrl=@{/blocks/{id}/texture(id=${form.id})},
+                 loadUrl=@{/blocks/{id}/texture(id=${form.id})},
+                 docWidth=16, docHeight=16, uvOverlay=null,
+                 editorTitle='Block texture',
+                 editorSubtitle=${form.textureId},
+                 studioUrl=@{/studio(type='block',id=${form.id})},
+                 previewKind='cube')}"></div>
+    </div>
+
+    <!-- Only the DEFINITION of the fragment BlockController returns by name. -->
+    <div th:fragment="texture-upload-status">
+        <div th:if="${textureMessage}" class="alert alert-success" th:text="${textureMessage}"></div>
+        <div th:if="${textureError}" class="alert alert-error" th:text="${textureError}"></div>
+    </div>
+
+    <div th:if="${editing}" th:replace="~{fragments/studio-modal :: modal}"></div>
+</div>
+</body>
+</html>

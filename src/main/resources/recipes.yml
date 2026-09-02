@@ -1,0 +1,50 @@
+# Sample recipes. Only SHAPED and SHAPELESS are supported.
+#
+# result and ingredient entries are resolved as a custom item id first, then a custom armor
+# id, then a vanilla material. A custom id becomes an exact match, so the recipe only
+# accepts that specific custom item and not any item sharing its material.
+#
+# For SHAPED recipes every row of shape must have the same length (at most 3 rows of 3),
+# a space means an empty slot, and every other character needs an ingredients entry.
+recipes:
+  void_sword:
+    type: SHAPED
+    result: void_sword
+    result-count: 1
+    shape:
+      - " V "
+      - " V "
+      - " S "
+    ingredients:
+      V: NETHERITE_INGOT
+      S: STICK
+
+  void_pickaxe:
+    type: SHAPED
+    result: void_pickaxe
+    result-count: 1
+    shape:
+      - "VVV"
+      - " S "
+      - " S "
+    ingredients:
+      V: NETHERITE_INGOT
+      S: STICK
+
+  void_helmet:
+    type: SHAPED
+    result: void_helmet
+    result-count: 1
+    shape:
+      - "VVV"
+      - "V V"
+    ingredients:
+      V: NETHERITE_INGOT
+
+  # Shows a custom item used as an ingredient rather than as the result.
+  void_sword_salvage:
+    type: SHAPELESS
+    result: NETHERITE_INGOT
+    result-count: 2
+    ingredients:
+      - void_sword

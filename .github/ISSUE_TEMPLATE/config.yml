@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question about using ItemForge
+    url: https://github.com/hoangluongtran0309/item-forge/discussions
+    about: Configuration help and general usage questions belong in Discussions, not the issue tracker.
+  - name: Security vulnerability
+    url: https://github.com/hoangluongtran0309/item-forge/security/advisories/new
+    about: Report privately through a security advisory instead of opening a public issue.

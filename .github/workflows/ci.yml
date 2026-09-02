@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or PR makes any in-flight run obsolete.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plugin:
+    name: Plugin (Paper)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+          cache-dependency-path: pom.xml
+
+      - name: Build and test
+        run: mvn -B -ntp verify
+
+      - name: Upload plugin jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: itemforge-plugin-jar
+          path: target/itemforge-*.jar
+          if-no-files-found: error
+          retention-days: 14
+
+  dashboard:
+    name: Dashboard (Spring Boot)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+          cache-dependency-path: dashboard/pom.xml
+
+      # frontend-maven-plugin downloads its own Node/npm into dashboard/node and
+      # populates dashboard/node_modules on every build. Neither lives in ~/.m2,
+      # so the Maven cache above does not cover them.
+      - name: Cache frontend tooling
+        uses: actions/cache@v4
+        with:
+          path: |
+            dashboard/node
+            dashboard/node_modules
+          key: ${{ runner.os }}-frontend-${{ hashFiles('dashboard/package-lock.json', 'dashboard/pom.xml') }}
+          restore-keys: ${{ runner.os }}-frontend-
+
+      - name: Build and test
+        run: ./mvnw -B -ntp verify

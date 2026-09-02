@@ -1,0 +1,89 @@
+resource-pack:
+  # Public address Minecraft clients connect to in order to download the
+  # resource pack. MUST be replaced with the server's real IP/domain before
+  # the resource pack is activated.
+  host: "CHANGE_ME"
+  port: 8080
+
+hud:
+  # Ticks between each update of the cooldown BossBar progress (20 ticks = 1s).
+  # Lower values look smoother but cost more scheduler work.
+  bossbar-update-interval-ticks: 5
+
+ai:
+  # Disabled by default: it needs a real api-key, and every /itemforge generate
+  # an admin runs costs money in API calls.
+  #
+  # This flag gates two features, but not equally. /itemforge generate needs it.
+  # /itemforge analyze does not: its rule findings are computed locally and cost
+  # nothing, and this flag only decides whether an AI review is added on top of
+  # them. Leaving this false gives a fully working analyze command.
+  enabled: false
+  # Which AI provider to use: claude, chatgpt, deepseek, or gemini. See
+  # StructuredAiClient/AiProviderFactory -- every provider goes through the one
+  # shared structured-output client, so adding a new one takes one adapter class
+  # and one switch branch, and touches nothing else in the plugin.
+  provider: "claude"
+  # Only the block matching "provider" above is read; the other three are
+  # ignored. In every block, timeout-seconds bounds the connect and the read
+  # together, so a provider that accepts the connection and then goes quiet
+  # still fails within it rather than hanging.
+  claude:
+    api-key: "CHANGE_ME"
+    # claude-haiku-4-5: fast and cheap, a good fit for short structured
+    # generation like this; it does not enable adaptive thinking by default, so
+    # it avoids the tool-call-written-as-plain-text problem the newer
+    # Opus/Sonnet models hit whenever thinking is turned off.
+    model: "claude-haiku-4-5"
+    # Plenty for a short response (material/display-name/lore/abilities). Raise
+    # it if you switch to a model with thinking on by default (e.g.
+    # claude-opus-5), because max-tokens caps thinking plus returned content
+    # together.
+    max-tokens: 2048
+    timeout-seconds: 30
+  chatgpt:
+    api-key: "CHANGE_ME"
+    # JSON is forced via response_format: json_object (not json_schema strict
+    # mode) -- the model only guarantees syntactically valid JSON, not that it
+    # matches the schema, so the system prompt has to describe the schema in
+    # prose.
+    # gpt-4o-mini: a cheap model for short tasks; THIS MODEL NAME CAN GO STALE
+    # quickly, double-check it before using this in production.
+    model: "gpt-4o-mini"
+    max-tokens: 2048
+    timeout-seconds: 30
+  deepseek:
+    api-key: "CHANGE_ME"
+    # Same API shape as OpenAI Chat Completions (response_format json_object).
+    # DeepSeek requires the word "json" to appear in the system or user prompt,
+    # otherwise the API can return a 400.
+    # deepseek-chat: a stable alias pointing at DeepSeek's current chat model,
+    # less likely to go stale than a version-pinned model name.
+    model: "deepseek-chat"
+    max-tokens: 2048
+    timeout-seconds: 30
+  gemini:
+    api-key: "CHANGE_ME"
+    # JSON is forced via generationConfig.responseSchema (Google validates and
+    # constrains it, which is closer to Claude's tool use than to OpenAI's
+    # response_format).
+    # Note: the api-key goes in the URL query string, not a header -- be careful
+    # when logging requests.
+    # gemini-2.0-flash: THIS MODEL NAME CAN GO STALE VERY QUICKLY (Google
+    # renames models often), double-check it before using this in production.
+    model: "gemini-2.0-flash"
+    max-tokens: 2048
+    timeout-seconds: 30
+
+dashboard-api:
+  # Disabled by default: only turn it on once a web dashboard is actually
+  # connecting to it, because this is an HTTP server that can create, edit and
+  # delete real items on the server.
+  enabled: false
+  port: 8081
+  # Every request must carry an "Authorization: Bearer <api-key>" header
+  # matching this value. MUST be changed before enabling the setting above.
+  api-key: "CHANGE_ME"
+  # Size limit for texture files uploaded through the API (bytes). Textures are
+  # small (16x16 to 64x32 PNG), so 2MB is a generous safety margin.
+  max-upload-bytes: 2097152

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Items</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="mb-5 flex flex-wrap items-center gap-3">
+        <div class="min-w-0 flex-1">
+            <h1 class="font-display text-2xl font-bold">Items</h1>
+            <p class="itemforge-tech-label" th:text="${items.size()} + ' registered'">0 registered</p>
+        </div>
+        <input type="search" class="input input-bordered input-sm w-full sm:w-56"
+               placeholder="Filter by name, id, material" data-filter-target="#items-grid"/>
+        <a th:href="@{/items/new}" class="btn btn-primary btn-sm">+ New Item</a>
+    </div>
+
+    <div th:if="${items.isEmpty()}" class="text-center py-16 text-base-content/60">
+        No items yet. Create your first one to get started.
+    </div>
+
+    <div id="items-grid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div class="item-card card bg-base-100 border-2 border-base-300 rounded-box hover:border-primary/60 transition-colors shadow-sm"
+             th:each="item : ${items}"
+             th:attr="data-filter-text=${#strings.toLowerCase(item.displayName() + ' ' + item.id() + ' ' + item.material())}">
+            <div class="card-body p-4 gap-2">
+                <div class="flex items-start gap-3">
+                    <div th:replace="~{fragments/texture-thumb :: thumb(
+                             url=@{/items/{id}/texture(id=${item.id()})},
+                             sizeClass='w-16 h-16 text-xl',
+                             fallbackLetter=${#strings.substring(item.material(), 0, 1)})}"></div>
+                    <div class="min-w-0">
+                        <h2 class="font-display font-semibold truncate" th:text="${item.displayName()}">Display Name</h2>
+                        <p class="itemforge-tech-label truncate" th:text="${item.id()}">id</p>
+                        <p class="itemforge-tech-label truncate"
+                           th:text="${item.material()} + ' · CMD ' + ${item.customModelData()}">MATERIAL · CMD 0</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-1" th:if="${not #lists.isEmpty(item.abilities())}">
+                    <th:block th:each="ability, it : ${item.abilities()}">
+                        <span th:if="${it.index < 3}"
+                              th:replace="~{fragments/badges :: ability-type-badge(type=${ability.type()})}"></span>
+                    </th:block>
+                    <span th:if="${item.abilities().size() > 3}" class="badge badge-ghost"
+                          th:text="'+' + ${item.abilities().size() - 3} + ' more'">+N more</span>
+                </div>
+                <div class="card-actions justify-end mt-2">
+                    <a th:href="@{/studio(type='item',id=${item.id()})}" class="btn btn-ghost btn-xs"
+                       title="Open the Texture Studio">Studio</a>
+                    <a th:href="@{/items/{id}/edit(id=${item.id()})}" class="btn btn-ghost btn-xs">Edit</a>
+                    <button type="button"
+                            class="btn btn-error btn-outline btn-xs"
+                            th:attr="hx-delete=@{/items/{id}(id=${item.id()})}"
+                            hx-target="closest .item-card" hx-swap="outerHTML swap:200ms"
+                            hx-confirm="Delete this item? This cannot be undone.">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="filter-empty-state" hidden="hidden" class="py-12 text-center text-base-content/60">
+        Nothing matches that filter.
+    </div>
+</div>
+</body>
+</html>

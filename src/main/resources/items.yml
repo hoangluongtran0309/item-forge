@@ -1,0 +1,38 @@
+# Sample custom items. Each id maps to textures/<id>.png in the plugin data folder;
+# the matching PNGs ship in examples/textures/ of the ItemForge repository.
+#
+# custom-model-data must be greater than 0, otherwise the item is left out of the
+# generated resource pack and keeps its vanilla appearance.
+#
+# Abilities currently support two types, POTION_EFFECT and DAMAGE_BONUS, but only the
+# RIGHT_CLICK and LEFT_CLICK triggers are dispatched at runtime, and DAMAGE_BONUS is not
+# applied yet. The samples below therefore stay on POTION_EFFECT + RIGHT_CLICK so that
+# every shipped example actually works in game.
+items:
+  void_sword:
+    material: NETHERITE_SWORD
+    custom-model-data: 1001
+    display-name: "&5Void Netherite Sword"
+    lore:
+      - "&7Quenched in the dark between worlds."
+      - "&8Right-click for a burst of speed."
+    abilities:
+      - type: POTION_EFFECT
+        trigger: RIGHT_CLICK
+        effect: SPEED
+        duration-seconds: 15
+        cooldown-seconds: 30
+
+  void_pickaxe:
+    material: NETHERITE_PICKAXE
+    custom-model-data: 1002
+    display-name: "&5Void Netherite Pickaxe"
+    lore:
+      - "&7Cuts stone the way light cuts fog."
+      - "&8Right-click to see in the dark."
+    abilities:
+      - type: POTION_EFFECT
+        trigger: RIGHT_CLICK
+        effect: NIGHT_VISION
+        duration-seconds: 60
+        cooldown-seconds: 45

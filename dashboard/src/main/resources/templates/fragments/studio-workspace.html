@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  The Studio's workspace, shared by BOTH the modal AND the /studio page -- that is what
+  makes "one editor, two places to embed it" true rather than two UIs drifting apart.
+  The JS finds everything through data-studio-* rather than ids, so this fragment can
+  appear several times on one page without creating duplicate ids.
+-->
+<div th:fragment="workspace" data-studio-root class="flex min-h-0 flex-1 flex-col">
+    <header class="flex flex-wrap items-center gap-2 border-b border-base-300 px-3 py-2">
+        <div class="min-w-0 flex-1">
+            <h3 data-studio-title class="truncate font-display text-base font-semibold">Draw texture</h3>
+            <p data-studio-subtitle class="itemforge-tech-label truncate" hidden="hidden"></p>
+        </div>
+        <span data-studio-dirty class="badge badge-warning badge-sm" hidden="hidden">Unsaved</span>
+        <button type="button" data-studio-undo class="btn btn-ghost btn-sm" title="Undo (Ctrl+Z)">&#8630;</button>
+        <button type="button" data-studio-redo class="btn btn-ghost btn-sm" title="Redo (Ctrl+Shift+Z)">&#8631;</button>
+
+        <!-- Secondary actions are collected into a menu: the top bar should carry
+             only document-level actions (Save/Close) and undo/redo -- anything
+             else is noise. -->
+        <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-ghost btn-sm" title="More actions">&#8943;</div>
+            <ul tabindex="0"
+                class="menu dropdown-content z-50 mt-1 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-elevated">
+                <li>
+                    <button type="button" data-studio-reload>Reload from server</button>
+                </li>
+                <li>
+                    <label>
+                        Import PNG&hellip;
+                        <input type="file" accept="image/png" data-studio-import class="hidden"/>
+                    </label>
+                </li>
+                <li>
+                    <button type="button" data-studio-reference>Reference library&hellip;</button>
+                </li>
+                <li>
+                    <button type="button" data-studio-download>Download PNG</button>
+                </li>
+            </ul>
+        </div>
+
+        <button type="button" data-studio-save class="btn btn-primary btn-sm"
+                title="Upload and rebuild the resource pack (Ctrl+S)">Save</button>
+        <button type="button" data-studio-close class="btn btn-ghost btn-sm btn-square" title="Close">&#10005;</button>
+    </header>
+
+    <div class="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <!-- Middle column: the vertical tool rail, the canvas, and the option row
+             for the selected tool. Tools on a vertical rail rather than a
+             horizontal top bar is the standard pixel-art editor layout -- it gives
+             the horizontal space back to the canvas. -->
+        <div class="flex min-h-0 flex-1">
+            <div data-studio-toolrail
+                 class="flex shrink-0 flex-col gap-1 overflow-y-auto border-r border-base-300 bg-base-100 p-1.5"></div>
+
+            <div class="flex min-h-0 flex-1 flex-col">
+                <!-- if-checkerboard: transparent cells have to read as transparent. The
+                     background is drawn in CSS here rather than into the canvas, so
+                     it stays fixed in screen space and does not distort when
+                     zooming. -->
+                <div data-studio-viewport
+                     class="if-checkerboard relative min-h-[18rem] flex-1 overflow-hidden bg-base-200"
+                     style="--if-checker-size: 8px; touch-action: none;">
+                    <div data-studio-stack class="absolute left-0 top-0 origin-top-left">
+                        <canvas data-studio-canvas class="image-pixelated absolute left-0 top-0 h-full w-full"></canvas>
+                        <canvas data-studio-overlay
+                                class="image-pixelated pointer-events-none absolute left-0 top-0 h-full w-full"></canvas>
+                        <canvas data-studio-ui class="pointer-events-none absolute left-0 top-0 h-full w-full"></canvas>
+                    </div>
+                </div>
+
+                <div data-studio-tooloptions
+                     class="flex flex-wrap items-center gap-3 border-t border-base-300 px-3 py-2"></div>
+            </div>
+        </div>
+
+        <!-- Sidebar: three FIXED regions, no tabs. Color and Layers sit in the same
+             working loop (pick a color -> paint on the selected layer -> toggle a
+             layer to check), so hiding either adds friction. Layers is also there to
+             be LOOKED AT: you have to see which layer you are on while drawing. -->
+        <aside class="flex w-full shrink-0 flex-col overflow-hidden border-t border-base-300
+                      lg:w-80 lg:border-l lg:border-t-0">
+            <!-- A live preview: it updates in the SAME frame as the canvas, reusing the
+                 composite buffer just computed (see viewport.onFrame). -->
+            <section class="shrink-0 border-b border-base-300">
+                <button type="button" data-studio-preview-toggle
+                        class="flex w-full items-center gap-1 px-3 py-2 text-left hover:bg-base-200">
+                    <span data-studio-preview-caret class="text-xs opacity-60">&#9660;</span>
+                    <span class="itemforge-tech-label uppercase">Preview</span>
+                </button>
+                <div data-studio-preview-body class="px-3 pb-3">
+                    <div data-studio-preview
+                         class="if-checkerboard h-44 w-full cursor-grab rounded border border-base-300"
+                         style="--if-checker-size: 6px; touch-action: none;"></div>
+                    <p class="itemforge-tech-label pt-1">drag to rotate, scroll to zoom</p>
+                </div>
+            </section>
+
+            <section class="shrink-0 border-b border-base-300 px-3 py-3">
+                <p class="itemforge-tech-label pb-2 uppercase">Color</p>
+                <div data-studio-colour></div>
+            </section>
+
+            <!-- Layers takes the remaining space and scrolls on its own: the layer count
+                 is unknown ahead of time, but Color above it must stay visible. -->
+            <section class="flex min-h-0 flex-1 flex-col px-3 py-3">
+                <div data-studio-layers class="flex min-h-0 flex-1 flex-col gap-2"></div>
+            </section>
+        </aside>
+    </div>
+
+    <footer data-studio-status
+            class="flex flex-wrap items-center gap-3 border-t border-base-300 px-3 py-1.5">
+        <span class="itemforge-tech-label">Size</span>
+        <span data-studio-size class="font-mono text-xs">16 x 16</span>
+        <span class="itemforge-tech-label">Pos</span>
+        <span data-studio-position class="font-mono text-xs">0, 0</span>
+        <span class="itemforge-tech-label">Zoom</span>
+        <span data-studio-zoom class="font-mono text-xs">1x</span>
+        <button type="button" data-studio-fit class="btn btn-ghost btn-xs">Fit</button>
+        <span class="flex-1"></span>
+        <span class="itemforge-tech-label hidden sm:inline">
+            B pencil · E eraser · G fill · I pick · L line · U rect · Shift+U ellipse · M select · V move · Space pan
+        </span>
+    </footer>
+
+    <div data-studio-toasts class="toast toast-top toast-center z-[60]"></div>
+</div>
+
+<!-- The reference texture picker. The list is fetched from
+     /reference/api/search, so this dialog is just an empty shell. -->
+<dialog th:fragment="reference-dialog" id="studio-reference" class="modal">
+    <div class="modal-box flex h-[80vh] max-h-none w-[90vw] max-w-4xl flex-col gap-3">
+        <h3 class="font-display text-lg font-bold">Reference library</h3>
+        <input type="search" data-reference-query class="input input-bordered input-sm w-full"
+               placeholder="Filter by path, e.g. item/diamond_sword"/>
+        <div data-reference-results class="grid flex-1 grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-6"></div>
+        <p class="itemforge-tech-label">
+            Picking a texture imports it as a new layer. Nothing is uploaded to the server.
+        </p>
+        <div class="modal-action">
+            <form method="dialog"><button class="btn btn-ghost btn-sm">Close</button></form>
+        </div>
+    </div>
+</dialog>
+
+<!-- A shared confirmation dialog, replacing the native window.confirm(). -->
+<dialog th:fragment="confirm-dialog" id="studio-confirm" class="modal">
+    <div class="modal-box max-w-md">
+        <h3 data-confirm-title class="font-display text-lg font-bold">Are you sure?</h3>
+        <p data-confirm-body class="py-3 text-sm text-base-content/80"></p>
+        <div class="modal-action">
+            <form method="dialog" class="flex gap-2">
+                <button value="cancel" class="btn btn-ghost btn-sm">Keep editing</button>
+                <button value="confirm" class="btn btn-error btn-sm">Discard</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+</body>
+</html>

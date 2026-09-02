@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  A SINGLE field's error, shown directly under its input. Previously every error was
+  collected into one banner at the top of the page, leaving the user to guess which field
+  was wrong.
+
+  It reads the `fieldErrors` map (see FormErrors.java) rather than using th:errors /
+  #fields: those require a BindingResult to exist at render time, but
+  items/form :: form-fields is also returned on its own by the AI-generate endpoint --
+  where there is no BindingResult and #fields would throw.
+-->
+<div th:fragment="error(field)"
+     th:if="${fieldErrors != null and fieldErrors.containsKey(field)}"
+     class="label pb-0 pt-1">
+    <span class="label-text-alt text-error" th:text="${fieldErrors.get(field)}">Error</span>
+</div>
+</body>
+</html>

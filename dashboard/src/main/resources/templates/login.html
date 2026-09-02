@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" data-theme="itemforge-dark">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <!-- Duplicated from layout/base.html's head fragment rather than sharing it --
+         this page is deliberately standalone (a plain POST form needing no
+         htmx/CSRF meta tags), and the same FOUC reasoning applies. -->
+    <script>(function () {
+        try {
+            var theme = localStorage.getItem('itemforge-theme') || 'itemforge-dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+        }
+    })();</script>
+    <title>Log in - ItemForge Dashboard</title>
+    <link rel="icon" type="image/x-icon" th:href="@{/icons/favicon.ico}"/>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}"/>
+</head>
+<body class="relative flex min-h-screen items-center justify-center overflow-hidden bg-base-200 px-4 font-sans">
+<!-- Two soft glows behind the card: purely decorative, with pointer-events-none so
+     they can never block interaction with the form. -->
+<div class="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-primary/10 blur-3xl"></div>
+<div class="pointer-events-none absolute -bottom-40 -right-24 h-96 w-96 rounded-full bg-accent/10 blur-3xl"></div>
+<main class="relative w-full max-w-sm rounded-box border border-base-300 bg-base-100 shadow-elevated">
+    <div class="card-body items-center text-center">
+        <span class="mb-2 inline-flex items-center justify-center rounded-full border border-base-300 bg-base-200 p-2"
+              style="width:112px;height:112px">
+            <img th:src="@{/images/itemforge.png}" alt="ItemForge" class="w-full h-full object-contain"/>
+        </span>
+        <h1 class="text-xl font-bold font-display text-center">ItemForge Dashboard</h1>
+        <p class="itemforge-tech-label">custom item system</p>
+        <form th:action="@{/login}" method="post" class="mt-4 flex w-full flex-col gap-3">
+            <div th:if="${param.error}" class="alert alert-error text-sm py-2">Invalid username or password.</div>
+            <div th:if="${param.logout}" class="alert alert-info text-sm py-2">You have been logged out.</div>
+            <label class="form-control w-full">
+                <div class="label"><span class="label-text">Username</span></div>
+                <input type="text" name="username" required="required" autofocus="autofocus"
+                       class="input input-bordered w-full"/>
+            </label>
+            <label class="form-control w-full">
+                <div class="label"><span class="label-text">Password</span></div>
+                <input type="password" name="password" required="required" class="input input-bordered w-full"/>
+            </label>
+            <button type="submit" class="btn btn-primary mt-2">Log in</button>
+        </form>
+    </div>
+</main>
+</body>
+</html>

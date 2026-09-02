@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  ONE dialog shared by every trigger on the page (item texture, armor icon, armor layer
+  1/2, block texture). main.js reconfigures the workspace on each open from the
+  data-studio-* attributes of the button just clicked, and destroys the previous Studio
+  instance.
+-->
+<th:block th:fragment="modal">
+    <dialog id="studio-modal" class="modal">
+        <div class="modal-box flex h-[92vh] max-h-none w-[96vw] max-w-none flex-col overflow-hidden p-0">
+            <div th:replace="~{fragments/studio-workspace :: workspace}"></div>
+        </div>
+        <!-- Deliberately no form.modal-backdrop to close: a click outside would
+             discard an unsaved drawing without asking. Esc is intercepted
+             conditionally by main.js. -->
+        <div class="modal-backdrop bg-black/60"></div>
+    </dialog>
+    <div th:replace="~{fragments/studio-workspace :: reference-dialog}"></div>
+    <div th:replace="~{fragments/studio-workspace :: confirm-dialog}"></div>
+</th:block>
+</body>
+</html>

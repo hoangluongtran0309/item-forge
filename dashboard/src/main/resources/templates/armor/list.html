@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Armor</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="mb-5 flex flex-wrap items-center gap-3">
+        <div class="min-w-0 flex-1">
+            <h1 class="font-display text-2xl font-bold">Armor</h1>
+            <p class="itemforge-tech-label" th:text="${armorPieces.size()} + ' pieces'">0 pieces</p>
+        </div>
+        <input type="search" class="input input-bordered input-sm w-full sm:w-56"
+               placeholder="Filter by name, id, slot" data-filter-target="#armor-grid"/>
+        <a th:href="@{/armor/new}" class="btn btn-primary btn-sm">+ New Armor Piece</a>
+    </div>
+
+    <div th:if="${armorPieces.isEmpty()}" class="text-center py-16 text-base-content/60">
+        No armor pieces yet. Create your first one to get started.
+    </div>
+
+    <div id="armor-grid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div class="armor-card card bg-base-100 border-2 border-base-300 rounded-box hover:border-primary/60 transition-colors shadow-sm"
+             th:each="armor : ${armorPieces}"
+             th:attr="data-filter-text=${#strings.toLowerCase(armor.displayName() + ' ' + armor.id() + ' '
+                     + armor.material() + ' ' + armor.slot() + ' ' + armor.armorAssetId())}">
+            <div class="card-body p-4 gap-2">
+                <div class="flex items-start gap-3">
+                    <div th:replace="~{fragments/texture-thumb :: thumb(
+                             url=@{/armor/{id}/icon(id=${armor.id()})},
+                             sizeClass='w-16 h-16 text-xl',
+                             fallbackLetter=${#strings.substring(armor.material(), 0, 1)})}"></div>
+                    <div class="min-w-0">
+                        <h2 class="font-display font-semibold truncate" th:text="${armor.displayName()}">Display Name</h2>
+                        <p class="itemforge-tech-label truncate" th:text="${armor.id()}">id</p>
+                        <p class="itemforge-tech-label truncate" th:text="${armor.material()}">MATERIAL</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-1">
+                    <span class="badge badge-outline" th:text="${armor.slot()}">SLOT</span>
+                    <!-- armorAssetId determines which layer texture is shared across the
+                         set, so it has to be visible right on the card. -->
+                    <span class="badge badge-ghost font-mono" th:text="${armor.armorAssetId()}">asset</span>
+                </div>
+                <div class="card-actions justify-end mt-2">
+                    <a th:href="@{/studio(type='armor-layer',id=${armor.id()},layer='humanoid')}" class="btn btn-ghost btn-xs"
+                       title="Open the Texture Studio on the shared body layer">Studio</a>
+                    <a th:href="@{/armor/{id}/edit(id=${armor.id()})}" class="btn btn-ghost btn-xs">Edit</a>
+                    <button type="button"
+                            class="btn btn-error btn-outline btn-xs"
+                            th:attr="hx-delete=@{/armor/{id}(id=${armor.id()})}"
+                            hx-target="closest .armor-card" hx-swap="outerHTML swap:200ms"
+                            hx-confirm="Delete this armor piece? This cannot be undone.">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="filter-empty-state" hidden="hidden" class="py-12 text-center text-base-content/60">
+        Nothing matches that filter.
+    </div>
+</div>
+</body>
+</html>

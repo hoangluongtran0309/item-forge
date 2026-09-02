@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title>Reference Library</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="mb-5 flex flex-wrap items-center gap-3">
+        <div class="min-w-0 flex-1">
+            <h1 class="font-display text-2xl font-bold">Reference Library</h1>
+            <p class="itemforge-tech-label" th:text="${#lists.size(packs)} + ' pack(s) imported'">0 packs</p>
+        </div>
+        <input type="search" name="q" th:value="${query}"
+               class="input input-bordered input-sm w-full sm:w-64"
+               placeholder="Filter by path, e.g. item/diamond"
+               th:attr="hx-get=@{/reference/search}"
+               hx-trigger="input changed delay:250ms, search"
+               hx-target="#reference-grid" hx-swap="outerHTML"/>
+    </div>
+
+    <div class="if-panel mb-6">
+        <div class="card-body gap-3 p-5">
+            <h2 class="font-display text-base font-semibold">Import a resource pack</h2>
+            <!-- States the copyright position directly in the UI: ItemForge does NOT
+                 bundle or download any Mojang asset. Admins supply a pack they
+                 already own. -->
+            <p class="text-sm text-base-content/70">
+                Upload a <code class="font-mono">.zip</code> or <code class="font-mono">.mcpack</code> you already own.
+                Only PNG files under <code class="font-mono">assets/&lt;namespace&gt;/textures/</code> are read, and
+                everything stays on this machine. ItemForge ships no Minecraft assets of its own.
+            </p>
+            <form th:action="@{/reference/import}" method="post" enctype="multipart/form-data"
+                  class="flex flex-wrap items-center gap-2">
+                <input type="file" name="file" accept=".zip,.mcpack" required="required"
+                       class="file-input file-input-bordered file-input-sm"/>
+                <button type="submit" class="btn btn-primary btn-sm">Import</button>
+            </form>
+
+            <div th:if="${not #lists.isEmpty(packs)}" class="flex flex-wrap items-center gap-2 pt-1">
+                <span class="itemforge-tech-label uppercase">Packs</span>
+                <span th:each="pack : ${packs}" class="badge badge-outline gap-1 font-mono">
+                    <span th:text="${pack}">pack</span>
+                    <button type="button" class="text-error"
+                            th:attr="hx-delete=@{/reference/{pack}(pack=${pack})}"
+                            hx-confirm="Remove this reference pack from disk?"
+                            aria-label="Remove pack">&times;</button>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div th:fragment="texture-grid" id="reference-grid">
+        <p th:if="${#lists.isEmpty(textures)}" class="py-16 text-center text-base-content/60">
+            Nothing here yet. Import a resource pack above to build your reference library.
+        </p>
+        <p th:if="${#lists.size(textures) >= searchLimit}" class="mb-3 text-sm text-base-content/60"
+           th:text="'Showing the first ' + ${searchLimit} + ' matches - narrow the filter to see more.'"></p>
+
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+            <figure th:each="texture : ${textures}"
+                    class="if-panel flex flex-col items-center gap-1 p-2 text-center">
+                <img class="if-slot h-16 w-16"
+                     th:src="@{'/reference/file/' + ${texture.pack()} + '/' + ${texture.path()}}"
+                     th:alt="${texture.name()}"/>
+                <figcaption class="itemforge-tech-label w-full truncate" th:title="${texture.path()}"
+                            th:text="${texture.name()}">name.png</figcaption>
+            </figure>
+        </div>
+    </div>
+</div>
+</body>
+</html>

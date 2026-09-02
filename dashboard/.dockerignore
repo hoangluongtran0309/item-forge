@@ -1,0 +1,10 @@
+# Keep the build context small and avoid shadowing the in-container
+# npm install/build with whatever happens to exist on the host.
+target/
+node_modules/
+node/
+.git
+.idea
+.vscode
+HELP.md
+*.iml

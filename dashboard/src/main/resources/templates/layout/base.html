@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      data-theme="itemforge-dark">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <!-- Applies the stored theme before any CSS or paint happens, so switching
+         themes never flashes the old one on reload (FOUC protection). -->
+    <script>(function () {
+        try {
+            var theme = localStorage.getItem('itemforge-theme') || 'itemforge-dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+        }
+    })();</script>
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">ItemForge Dashboard</title>
+    <link rel="icon" type="image/x-icon" th:href="@{/icons/favicon.ico}"/>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <!-- CSS before scripts: avoids an unstyled gap while the five script files
+         load (the old order put the <link> last). -->
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}"/>
+    <script th:src="@{/webjars/htmx.org/dist/htmx.min.js}"></script>
+    <script th:src="@{/js/htmx-csrf.js}"></script>
+    <script th:src="@{/js/dashboard.js}"></script>
+    <script th:src="@{/js/texture-upload.js}"></script>
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <!-- The Studio is an ES module. It must live in <head> and NEVER inside a
+         region htmx swaps: htmx re-executes classic <script> tags in new content,
+         but a module is fetched only once per URL and so would not run again. -->
+    <script type="module" th:src="@{/js/studio/main.js}"></script>
+    <th:block layout:fragment="head-extra"></th:block>
+</head>
+<body class="font-sans">
+<!-- "drawer lg:drawer-open" is the daisyUI idiom for a sidebar that is fixed from lg
+     upwards and slides over on mobile -- one structure covering both cases. -->
+<div class="drawer lg:drawer-open">
+    <input id="if-drawer" type="checkbox" class="drawer-toggle"/>
+
+    <div class="drawer-content flex min-h-screen flex-col bg-base-200">
+        <header class="navbar min-h-0 gap-2 border-b border-base-300 bg-base-100 px-3 py-2 lg:hidden">
+            <label for="if-drawer" class="btn btn-ghost btn-sm btn-square" aria-label="Open navigation menu">
+                <svg class="h-5 w-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+                </svg>
+            </label>
+            <a th:href="@{/}" class="flex flex-1 items-center gap-2 font-display text-base font-semibold">
+                <img th:src="@{/images/itemforge.png}" alt="" class="h-7 w-7 object-contain"/>
+                ItemForge
+            </a>
+            <div th:replace="~{layout/base :: theme-switch}"></div>
+        </header>
+
+        <!-- The Studio needs the whole viewport, so padding is dropped and it is
+             allowed to stretch; every other page keeps the normal padding.
+             StudioController sets fullBleed=true. -->
+        <main th:classappend="${fullBleed} ? 'flex min-h-0 flex-1 min-w-0 flex-col' : 'flex-1 min-w-0 px-4 py-6 sm:px-8'">
+            <!-- Keep this id: GlobalExceptionHandler retargets htmx responses to
+                 #error-banner (HX-Retarget), and it has to exist on every page. -->
+            <div id="error-banner" th:text="${errorBanner} ?: ''"
+                 th:classappend="${errorBanner} ? 'alert alert-error mb-6' : ''"></div>
+            <div th:if="${toastMessage}" class="alert alert-success mb-6" th:text="${toastMessage}">Saved</div>
+            <div layout:fragment="content" class="min-w-0">Page content</div>
+        </main>
+    </div>
+
+    <div class="drawer-side z-40">
+        <label for="if-drawer" class="drawer-overlay" aria-label="Close navigation menu"></label>
+        <aside class="if-sidebar">
+            <a th:href="@{/}" class="flex items-center gap-3 border-b border-base-300 px-4 py-4">
+                <span class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-base-300 bg-base-200 p-1">
+                    <img th:src="@{/images/itemforge.png}" alt="ItemForge" class="h-full w-full object-contain"/>
+                </span>
+                <span class="min-w-0">
+                    <span class="block truncate font-display text-base font-semibold leading-tight">ItemForge</span>
+                    <span class="itemforge-tech-label block truncate">dashboard</span>
+                </span>
+            </a>
+
+            <nav class="flex-1 overflow-y-auto px-2 py-3">
+                <p class="itemforge-tech-label px-3 pb-1 uppercase">Content</p>
+                <ul class="menu menu-sm w-full gap-0.5 p-0">
+                    <li>
+                        <a th:href="@{/}" th:classappend="${activeNav == 'overview'} ? 'active'">
+                            <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M3 3h8v8H3zm10 0h8v5h-8zM3 13h8v8H3zm10 3h8v5h-8zm0-6h8v4h-8z"/>
+                            </svg>
+                            Overview
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/items}" th:classappend="${activeNav == 'items'} ? 'active'">
+                            <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M6.9 17.7 4.3 20.3l-.6-.6 2.6-2.6zM19.8 4.9 12 12.7l-.7-.7 7.8-7.8a.7.7 0 0 1 1 0l-.3.7zM8.3 14.3l1.4 1.4-3.1 3.1-1.4-1.4z"/>
+                                <path d="M14 3h7v7h-2V5h-5z"/>
+                            </svg>
+                            Items
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/armor}" th:classappend="${activeNav == 'armor'} ? 'active'">
+                            <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5zm0 2.2 6 2.2V11c0 4-2.5 7.5-6 9-3.5-1.5-6-5-6-9V6.4z"/>
+                            </svg>
+                            Armor
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/blocks}" th:classappend="${activeNav == 'blocks'} ? 'active'">
+                            <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M12 2 3 7v10l9 5 9-5V7zm0 2.3 6.5 3.6L12 11.5 5.5 7.9zM5 9.6l6 3.3v6.5l-6-3.3zm8 9.8v-6.5l6-3.3v6.5z"/>
+                            </svg>
+                            Blocks
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/recipes}" th:classappend="${activeNav == 'recipes'} ? 'active'">
+                            <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M3 3h6v6H3zm6 0h6v6H9zm6 0h6v6h-6zM3 9h6v6H3zm6 0h6v6H9zm6 0h6v6h-6zM3 15h6v6H3zm6 0h6v6H9zm6 0h6v6h-6z"
+                                      fill="none" stroke="currentColor" stroke-width="1.4"/>
+                            </svg>
+                            Recipes
+                        </a>
+                    </li>
+                </ul>
+
+                <p class="itemforge-tech-label px-3 pb-1 pt-4 uppercase">Tools</p>
+                <ul class="menu menu-sm w-full gap-0.5 p-0">
+                    <li>
+                        <a th:href="@{/balance}" th:classappend="${activeNav == 'balance'} ? 'active'">
+                            <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M11 2h2v3h-2zm1 4 7 3-1.6 4.6a4 4 0 0 1-7.7-.1L8 9zm-6.6 3.7 2.8 6.4a4 4 0 0 1-6.4 0zM7 20h10v2H7z"
+                                      fill="none" stroke="currentColor" stroke-width="1.4"/>
+                            </svg>
+                            Balance
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/studio}" th:classappend="${activeNav == 'studio'} ? 'active'">
+                            <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M12 2a10 10 0 0 0 0 20c1.4 0 2.5-1.1 2.5-2.5 0-.7-.2-1.2-.7-1.7-.4-.4-.6-.9-.6-1.4 0-1.1.9-2 2-2h1.6A5.2 5.2 0 0 0 22 9.2C22 5.2 17.5 2 12 2zM6.5 12a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3.5 3a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+                            </svg>
+                            Texture Studio
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/reference}" th:classappend="${activeNav == 'reference'} ? 'active'">
+                            <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M4 4h7v16H4zm9 0h7v16h-7zm1 2v3h5V6zm0 5v3h5v-3z"/>
+                            </svg>
+                            Reference Library
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="border-t border-base-300 px-3 py-3">
+                <div class="flex items-center gap-2">
+                    <div th:replace="~{layout/base :: theme-switch}"></div>
+                    <span class="min-w-0 flex-1 truncate text-sm opacity-70" sec:authentication="name">user</span>
+                    <form th:action="@{/logout}" method="post">
+                        <button type="submit" class="btn btn-outline btn-xs">Log out</button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<!-- dashboard.js injects toasts here when the server returns HX-Trigger: {"toast": "..."} -->
+<div id="toast-container" class="toast toast-top toast-end z-50"></div>
+
+<!-- The same control appears twice (mobile header + sidebar footer), so it uses a
+     class rather than an id -- theme-toggle.js queries .theme-toggle and keeps the
+     checked state of every copy in sync. -->
+<th:block th:fragment="theme-switch">
+    <label class="swap swap-rotate btn btn-ghost btn-sm btn-circle" aria-label="Toggle light/dark theme">
+        <input type="checkbox" class="theme-toggle"/>
+        <svg class="swap-off h-5 w-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M5.64 17l-.71.71a1 1 0 000 1.41 1 1 0 001.41 0l.71-.71A1 1 0 005.64 17zM5 12a1 1 0 00-1-1H3a1 1 0 000 2h1a1 1 0 001-1zm7-7a1 1 0 001-1V3a1 1 0 00-2 0v1a1 1 0 001 1zm6.36 2.64a1 1 0 00.7-.29l.71-.71a1 1 0 10-1.41-1.41l-.71.71a1 1 0 00.71 1.7zm1.64 4.36h-1a1 1 0 000 2h1a1 1 0 000-2zm-2.34 6.24a1 1 0 000 1.41l.71.71a1 1 0 001.41-1.41l-.71-.71a1 1 0 00-1.41 0zM12 6a6 6 0 106 6 6 6 0 00-6-6zm0 10a4 4 0 114-4 4 4 0 01-4 4zm0-14a1 1 0 001-1V0a1 1 0 00-2 0v1a1 1 0 001 1z"/>
+        </svg>
+        <svg class="swap-on h-5 w-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M21.64 13a1 1 0 00-1.05-.14 8.05 8.05 0 01-3.37.73 8.15 8.15 0 01-8.14-8.1 8.59 8.59 0 01.25-2A1 1 0 008 2.36a10.14 10.14 0 1014 11.69 1 1 0 00-.36-1.05z"/>
+        </svg>
+    </label>
+</th:block>
+</body>
+</html>

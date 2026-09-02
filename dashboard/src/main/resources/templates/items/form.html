@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head>
+    <title th:text="${editing} ? 'Edit Item' : 'New Item'">Item Form</title>
+</head>
+<body>
+<div layout:fragment="content" class="max-w-5xl">
+    <h1 class="text-2xl font-bold font-display mb-4" th:text="${editing} ? 'Edit Item' : 'New Item'">Item Form</h1>
+    <div th:if="${error}" class="alert alert-error mb-4" th:text="${error}">Error</div>
+
+    <form th:if="${!editing}" th:action="@{/items}" method="post" class="flex flex-col gap-6">
+        <div class="card bg-base-100 border-2 border-base-300 rounded-box">
+            <div class="card-body gap-3">
+                <h2 class="text-lg font-semibold font-display">Identity</h2>
+                <div id="item-identity-fields" class="flex flex-col gap-3">
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">ID</span></div>
+                        <input type="text" name="id" th:value="${form.id}" required="required" th:classappend="${fieldErrors != null and fieldErrors.containsKey('id')} ? 'input-error'" class="input input-bordered w-full max-w-md font-mono"/>
+                        <div th:replace="~{fragments/field-error :: error('id')}"></div>
+                    </label>
+                    <label class="form-control w-full">
+                        <div class="label"><span class="label-text">AI description (optional)</span></div>
+                        <textarea name="description" th:text="${form.description}"
+                                  placeholder="a flaming sword that sets enemies on fire on hit"
+                                  class="textarea textarea-bordered w-full max-w-md"></textarea>
+                    </label>
+                    <div class="flex items-center gap-3">
+                        <button type="button"
+                                class="btn btn-secondary btn-sm"
+                                th:attr="hx-post=@{/items/generate}"
+                                hx-include="[name='id'],[name='description']"
+                                hx-target="#item-form-fields" hx-swap="outerHTML"
+                                hx-indicator="#generate-spinner, #item-form-fields-skeleton"
+                                hx-disabled-elt="this">
+                            Generate with AI
+                        </button>
+                        <span id="generate-spinner" class="htmx-indicator loading loading-spinner loading-sm"></span>
+                    </div>
+                    <div id="item-form-fields-skeleton" class="htmx-indicator flex flex-col gap-3">
+                        <div class="skeleton h-10 w-full max-w-md"></div>
+                        <div class="skeleton h-10 w-full max-w-md"></div>
+                        <div class="skeleton h-10 w-full max-w-md"></div>
+                        <div class="skeleton h-16 w-full max-w-md"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="item-form-fields" th:fragment="form-fields(form)" class="card bg-base-100 border-2 border-base-300 rounded-box">
+            <div class="card-body gap-3">
+                <h2 class="text-lg font-semibold font-display">Details</h2>
+                <label class="form-control w-full">
+                    <div class="label"><span class="label-text">Material</span></div>
+                    <input type="text" name="material" th:value="${form.material}" required="required" th:classappend="${fieldErrors != null and fieldErrors.containsKey('material')} ? 'input-error'" class="input input-bordered w-full max-w-md font-mono"/>
+                    <div th:replace="~{fragments/field-error :: error('material')}"></div>
+                </label>
+                <label class="form-control w-full">
+                    <div class="label"><span class="label-text">Custom Model Data (optional - auto-assigned if left blank)</span></div>
+                    <input type="number" name="customModelData" th:value="${form.customModelData}" class="input input-bordered w-full max-w-md font-mono"/>
+                </label>
+                <label class="form-control w-full">
+                    <div class="label"><span class="label-text">Display Name</span></div>
+                    <input type="text" name="displayName" th:value="${form.displayName}" required="required" th:classappend="${fieldErrors != null and fieldErrors.containsKey('displayName')} ? 'input-error'" class="input input-bordered w-full max-w-md"/>
+                    <div th:replace="~{fragments/field-error :: error('displayName')}"></div>
+                </label>
+                <label class="form-control w-full">
+                    <div class="label"><span class="label-text">Lore (one line each)</span></div>
+                    <textarea name="loreText" th:text="${form.loreText}" class="textarea textarea-bordered w-full max-w-md"></textarea>
+                </label>
+
+                <h2 class="text-lg font-semibold font-display mt-2">Abilities</h2>
+                <div id="abilities-list" th:fragment="abilities-list(form)" class="flex flex-col gap-3">
+                    <div class="ability-row card bg-base-200 border border-base-300 p-3 flex-row flex-wrap gap-2 items-center"
+                         th:each="ability, it : ${form.abilities}">
+                        <select th:name="|abilities[${it.index}].type|" onchange="toggleAbilityFields(this)"
+                                class="select select-bordered select-sm">
+                            <option value="POTION_EFFECT" th:selected="${ability.type == 'POTION_EFFECT'}">Potion
+                                Effect
+                            </option>
+                            <option value="DAMAGE_BONUS" th:selected="${ability.type == 'DAMAGE_BONUS'}">Damage Bonus
+                            </option>
+                        </select>
+                        <select th:name="|abilities[${it.index}].trigger|" class="select select-bordered select-sm">
+                            <option th:each="t : ${T(java.util.List).of('RIGHT_CLICK','LEFT_CLICK','ON_HIT','ON_KILL','ON_CONSUME')}"
+                                    th:value="${t}" th:text="${t}" th:selected="${t == ability.trigger}">RIGHT_CLICK
+                            </option>
+                        </select>
+                        <input type="number" th:name="|abilities[${it.index}].cooldownSeconds|"
+                               th:value="${ability.cooldownSeconds}" placeholder="cooldown (s)"
+                               class="input input-bordered input-sm w-32 font-mono"/>
+
+                        <span class="potion-fields" th:hidden="${ability.type != 'POTION_EFFECT'}">
+                            <select th:name="|abilities[${it.index}].effect|" class="select select-bordered select-sm">
+                                <option th:each="e : ${T(java.util.List).of('FIRE_RESISTANCE','SLOWNESS','SPEED','NIGHT_VISION','REGENERATION')}"
+                                        th:value="${e}" th:text="${e}" th:selected="${e == ability.effect}">
+                                    FIRE_RESISTANCE
+                                </option>
+                            </select>
+                            <input type="number" th:name="|abilities[${it.index}].durationSeconds|"
+                                   th:value="${ability.durationSeconds}" placeholder="duration (s)"
+                                   class="input input-bordered input-sm w-32 font-mono"/>
+                        </span>
+
+                        <span class="damage-fields" th:hidden="${ability.type != 'DAMAGE_BONUS'}">
+                            <input type="number" step="0.1" th:name="|abilities[${it.index}].bonusPercent|"
+                                   th:value="${ability.bonusPercent}" placeholder="bonus %"
+                                   class="input input-bordered input-sm w-32 font-mono"/>
+                        </span>
+
+                        <button type="button"
+                                class="btn btn-error btn-outline btn-xs ml-auto"
+                                th:attr="hx-post=@{/items/abilities/remove-row(index=${it.index})}"
+                                hx-include="closest form" hx-target="#abilities-list" hx-swap="outerHTML">
+                            Remove
+                        </button>
+                    </div>
+
+                    <button type="button"
+                            class="btn btn-outline btn-sm self-start"
+                            th:attr="hx-post=@{/items/abilities/add-row}"
+                            hx-include="closest form" hx-target="#abilities-list" hx-swap="outerHTML">
+                        + Add ability
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary self-start">Create Item</button>
+    </form>
+
+    <div th:if="${editing}" class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <form th:action="@{/items/{id}(id=${form.id})}" method="post" class="flex flex-col gap-6">
+            <input type="hidden" name="_method" value="PUT"/>
+            <div class="card bg-base-100 border-2 border-base-300 rounded-box">
+                <div class="card-body gap-3">
+                    <h2 class="text-lg font-semibold font-display">Identity</h2>
+                    <div id="item-identity-fields">
+                        <label class="form-control w-full">
+                            <div class="label"><span class="label-text">ID</span></div>
+                            <input type="text" name="id" th:value="${form.id}" readonly="readonly" th:classappend="${fieldErrors != null and fieldErrors.containsKey('id')} ? 'input-error'" class="input input-bordered w-full max-w-md font-mono"/>
+                            <div th:replace="~{fragments/field-error :: error('id')}"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div th:replace="~{items/form :: form-fields(${form})}"></div>
+            <button type="submit" class="btn btn-primary self-start">Save Changes</button>
+        </form>
+
+        <div th:replace="~{fragments/texture-panel :: panel(
+                 key='item-texture',
+                 title='Texture',
+                 badge='square, x16 (16, 32, 64...)',
+                 help=null,
+                 uploadUrl=@{/items/{id}/texture(id=${form.id})},
+                 loadUrl=@{/items/{id}/texture(id=${form.id})},
+                 docWidth=16, docHeight=16, uvOverlay=null,
+                 editorTitle='Item texture',
+                 editorSubtitle=${form.id},
+                 studioUrl=@{/studio(type='item',id=${form.id})},
+                 previewKind='item')}"></div>
+    </div>
+
+    <!-- Only the DEFINITION of the fragment ItemController returns by name
+         ("items/form :: texture-upload-status"), which htmx swaps into the panel's
+         #item-texture-upload-status. Rendered inline here it is always empty on
+         GET, because neither attribute is set yet. -->
+    <div th:fragment="texture-upload-status">
+        <div th:if="${textureMessage}" class="alert alert-success" th:text="${textureMessage}"></div>
+        <div th:if="${textureError}" class="alert alert-error" th:text="${textureError}"></div>
+    </div>
+
+    <div th:if="${editing}" th:replace="~{fragments/studio-modal :: modal}"></div>
+</div>
+</body>
+</html>

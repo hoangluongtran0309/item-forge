@@ -1,0 +1,19 @@
+# Sample custom block. Custom blocks are note blocks reskinned through their blockstate,
+# so every block must claim a unique (instrument, note) pair; note has to stay within 0-24.
+#
+# texture-id points at textures/blocks/<texture-id>.png, which ships in
+# examples/textures/blocks/ of the ItemForge repository.
+#
+# drop-item-id is resolved as a custom item id first and as a vanilla material second.
+# Custom blocks are not part of that lookup, so a block cannot drop itself.
+blocks:
+  void_netherite_block:
+    material: NOTE_BLOCK
+    instrument: BASS_GUITAR
+    note: 12
+    texture-id: void_netherite_block
+    drop-item-id: NETHERITE_BLOCK
+    custom-model-data: 2001
+    display-name: "&5Void Netherite Block"
+    lore:
+      - "&7A block of netherite the void never finished swallowing."
