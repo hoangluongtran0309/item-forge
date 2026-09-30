@@ -24,16 +24,16 @@
     <div id="blocks-grid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <div class="block-card card bg-base-100 border-2 border-base-300 rounded-box hover:border-primary/60 transition-colors shadow-sm"
              th:each="block : ${blocks}"
-             th:attr="data-filter-text=${#strings.toLowerCase(block.displayName() + ' ' + block.id() + ' '
+             th:attr="data-filter-text=${#strings.toLowerCase(block.plainDisplayName() + ' ' + block.id() + ' '
                      + block.instrument() + ' ' + block.textureId())}">
             <div class="card-body p-4 gap-2">
                 <div class="flex items-start gap-3">
                     <div th:replace="~{fragments/texture-thumb :: thumb(
                              url=@{/blocks/{id}/texture(id=${block.id()})},
                              sizeClass='w-16 h-16 text-xl',
-                             fallbackLetter=${#strings.substring(block.displayName(), 0, 1)})}"></div>
+                             fallbackLetter=${#strings.isEmpty(block.plainDisplayName()) ? '?' : #strings.substring(block.plainDisplayName(), 0, 1)})}"></div>
                     <div class="min-w-0">
-                        <h2 class="font-display font-semibold truncate" th:text="${block.displayName()}">Display Name</h2>
+                        <h2 class="font-display font-semibold truncate" th:text="${block.plainDisplayName()}">Display Name</h2>
                         <p class="itemforge-tech-label truncate" th:text="${block.id()}">id</p>
                     </div>
                 </div>

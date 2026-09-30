@@ -1,6 +1,7 @@
 package com.hoangluongtran0309.itemforge.dashboard.web;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -45,6 +46,19 @@ class BlockControllerTest {
 
     @MockitoBean
     private BlockApiClient blockApiClient;
+
+    @Test
+    @WithMockUser
+    void listShowsNamesWithoutMinecraftColourCodes() throws Exception {
+        when(blockApiClient.findAll()).thenReturn(List.of(
+                new BlockJson("void_block", "BASS_GUITAR", 12, "void_block", "GLOWSTONE", "&5Void Netherite Block",
+                        2001, List.of())));
+
+        mockMvc.perform(get("/blocks"))
+                .andExpect(content().string(containsString("Void Netherite Block")))
+                .andExpect(content().string(not(containsString("&amp;5"))))
+                .andExpect(content().string(containsString("thumb-fallback hidden\">V<")));
+    }
 
     @Test
     @WithMockUser

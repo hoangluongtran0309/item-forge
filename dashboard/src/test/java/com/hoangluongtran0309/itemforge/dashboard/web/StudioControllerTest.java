@@ -1,6 +1,7 @@
 package com.hoangluongtran0309.itemforge.dashboard.web;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -41,6 +42,17 @@ class StudioControllerTest {
 
     @MockitoBean
     private BlockApiClient blockApiClient;
+
+    @Test
+    @WithMockUser
+    void theTitleDropsMinecraftColourCodes() throws Exception {
+        when(itemApiClient.findById("void_sword")).thenReturn(
+                new ItemJson("void_sword", "NETHERITE_SWORD", 1, "&5Void Netherite Sword", List.of(), List.of()));
+
+        mockMvc.perform(get("/studio").param("type", "item").param("id", "void_sword"))
+                .andExpect(model().attribute("studioTitle", "Void Netherite Sword"))
+                .andExpect(content().string(not(containsString("&amp;5"))));
+    }
 
     @Test
     @WithMockUser

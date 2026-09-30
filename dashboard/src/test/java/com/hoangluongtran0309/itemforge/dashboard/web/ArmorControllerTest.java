@@ -1,6 +1,7 @@
 package com.hoangluongtran0309.itemforge.dashboard.web;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -42,6 +43,18 @@ class ArmorControllerTest {
 
     @MockitoBean
     private ArmorApiClient armorApiClient;
+
+    @Test
+    @WithMockUser
+    void listShowsNamesWithoutMinecraftColourCodes() throws Exception {
+        when(armorApiClient.findAll()).thenReturn(List.of(
+                new ArmorJson("void_helmet", "NETHERITE_HELMET", "HELMET", "void_armor", "&5Void Netherite Helmet",
+                        List.of())));
+
+        mockMvc.perform(get("/armor"))
+                .andExpect(content().string(containsString("Void Netherite Helmet")))
+                .andExpect(content().string(not(containsString("&amp;5"))));
+    }
 
     @Test
     @WithMockUser

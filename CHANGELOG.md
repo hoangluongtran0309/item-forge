@@ -22,6 +22,11 @@ section below is published verbatim as the notes of the matching GitHub Release.
   so the report used to reach neither the RCON client nor the log. It is now printed to the server
   console, and the RCON client is told to look there.
 
+- The dashboard no longer shows raw colour codes in names. Item, armor and block lists, the
+  Overview page and the Texture Studio title printed `&5Void Netherite Sword` as written in the
+  config; they now show the plain name, and a block's thumbnail fallback is its first letter
+  rather than `&`. The edit forms still show the codes, since that is where you change them.
+
 ### Documentation
 
 - Added [`docs/showcase/`](docs/showcase/README.md), a walkthrough of the plugin in game and of

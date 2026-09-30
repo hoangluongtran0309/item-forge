@@ -90,7 +90,7 @@ public class StudioController {
 
     private void item(String id, Model model) {
         ItemJson item = itemApiClient.findById(id);
-        model.addAttribute("studioTitle", item.displayName());
+        model.addAttribute("studioTitle", item.plainDisplayName());
         model.addAttribute("studioSubtitle", item.id() + " - " + item.material());
         model.addAttribute("docWidth", ICON_SIZE);
         model.addAttribute("docHeight", ICON_SIZE);
@@ -105,7 +105,7 @@ public class StudioController {
 
     private void block(String id, Model model) {
         BlockJson block = blockApiClient.findById(id);
-        model.addAttribute("studioTitle", block.displayName());
+        model.addAttribute("studioTitle", block.plainDisplayName());
         model.addAttribute("studioSubtitle", "texture id " + block.textureId() + " - all six faces");
         model.addAttribute("docWidth", ICON_SIZE);
         model.addAttribute("docHeight", ICON_SIZE);
@@ -120,7 +120,7 @@ public class StudioController {
 
     private void armorIcon(String id, Model model) {
         ArmorJson armor = armorApiClient.findById(id);
-        model.addAttribute("studioTitle", armor.displayName() + " - inventory icon");
+        model.addAttribute("studioTitle", armor.plainDisplayName() + " - inventory icon");
         model.addAttribute("studioSubtitle", armor.id() + " - " + armor.material());
         model.addAttribute("docWidth", ICON_SIZE);
         model.addAttribute("docHeight", ICON_SIZE);
@@ -143,7 +143,7 @@ public class StudioController {
         String sibling = leggings ? LAYER_BODY : LAYER_LEGGINGS;
 
         model.addAttribute("studioTitle",
-                armor.displayName() + (leggings ? " - leggings layer" : " - body layer"));
+                armor.plainDisplayName() + (leggings ? " - leggings layer" : " - body layer"));
         // armorAssetId has to be stated explicitly: the layer is shared by the WHOLE SET, so
         // editing it here also changes every other piece with the same asset id.
         model.addAttribute("studioSubtitle",
