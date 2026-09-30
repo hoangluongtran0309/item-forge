@@ -7,6 +7,12 @@ section below is published verbatim as the notes of the matching GitHub Release.
 
 ## [Unreleased]
 
+### Documentation
+
+- Added [`docs/showcase/`](docs/showcase/README.md), a walkthrough of the plugin in game and of
+  the dashboard, Texture Studio, balance analysis, and AI generation, in screenshots and GIFs
+  captured from a real run.
+
 ## [1.0.0] - 2026-09-02
 
 First public release.

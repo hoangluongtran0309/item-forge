@@ -51,6 +51,8 @@ node
 ### Docker deployment (install.sh / docker-compose.yml) ###
 # .env holds real secrets (API token, bcrypt hash) and must never be committed.
 .env
+# install.sh writes these when you choose to reconfigure; they carry the same secrets.
+.env.bak.*
 # A copy of the jar for the container to mount -- not an artifact worth storing.
 /itemforge.jar
 # World and config of the Paper server running under Docker, including the
@@ -64,5 +66,9 @@ node
 # Architecture notes, coding standards and test plans, plus the CLAUDE.md that
 # indexes them. Kept local: they describe how the project is built rather than
 # how it is used, and README.md is the entry point for anyone cloning the repo.
-/docs/
+# The pattern is /docs/* rather than /docs/ because git cannot re-include a
+# path whose parent directory is itself ignored.
+/docs/*
 /CLAUDE.md
+# The one public part of docs/: screenshots and GIFs linked from README.md.
+!/docs/showcase/
