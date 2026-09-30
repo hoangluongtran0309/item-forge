@@ -27,6 +27,10 @@ section below is published verbatim as the notes of the matching GitHub Release.
   config; they now show the plain name, and a block's thumbnail fallback is its first letter
   rather than `&`. The edit forms still show the codes, since that is where you change them.
 
+- Dashboard pages no longer scroll a few pixels past their own layout. A stray third copy of the
+  light/dark switch was rendered below the page, which added a scrollbar to pages that fit the
+  window and, when scrolled to the bottom, pushed the sidebar up and showed the extra switch.
+
 ### Documentation
 
 - Added [`docs/showcase/`](docs/showcase/README.md), a walkthrough of the plugin in game and of

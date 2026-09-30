@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  The light/dark switch. It appears twice (mobile header + sidebar footer), so it uses a class
+  rather than an id -- theme-toggle.js queries .theme-toggle and keeps the checked state of
+  every copy in sync.
+
+  It lives in its own file on purpose: a fragment defined inside layout/base.html is also
+  rendered right where it is defined, which put a third, stray switch below the page layout.
+-->
+<th:block th:fragment="theme-switch">
+    <label class="swap swap-rotate btn btn-ghost btn-sm btn-circle" aria-label="Toggle light/dark theme">
+        <input type="checkbox" class="theme-toggle"/>
+        <svg class="swap-off h-5 w-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M5.64 17l-.71.71a1 1 0 000 1.41 1 1 0 001.41 0l.71-.71A1 1 0 005.64 17zM5 12a1 1 0 00-1-1H3a1 1 0 000 2h1a1 1 0 001-1zm7-7a1 1 0 001-1V3a1 1 0 00-2 0v1a1 1 0 001 1zm6.36 2.64a1 1 0 00.7-.29l.71-.71a1 1 0 10-1.41-1.41l-.71.71a1 1 0 00.71 1.7zm1.64 4.36h-1a1 1 0 000 2h1a1 1 0 000-2zm-2.34 6.24a1 1 0 000 1.41l.71.71a1 1 0 001.41-1.41l-.71-.71a1 1 0 00-1.41 0zM12 6a6 6 0 106 6 6 6 0 00-6-6zm0 10a4 4 0 114-4 4 4 0 01-4 4zm0-14a1 1 0 001-1V0a1 1 0 00-2 0v1a1 1 0 001 1z"/>
+        </svg>
+        <svg class="swap-on h-5 w-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M21.64 13a1 1 0 00-1.05-.14 8.05 8.05 0 01-3.37.73 8.15 8.15 0 01-8.14-8.1 8.59 8.59 0 01.25-2A1 1 0 008 2.36a10.14 10.14 0 1014 11.69 1 1 0 00-.36-1.05z"/>
+        </svg>
+    </label>
+</th:block>
+</body>
+</html>
