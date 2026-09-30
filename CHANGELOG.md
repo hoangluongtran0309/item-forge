@@ -16,17 +16,14 @@ section below is published verbatim as the notes of the matching GitHub Release.
 - Narrowing a balance report to one id (`/itemforge analyze <id>`, or the box on the dashboard's
   Balance page) now narrows the AI findings too. They used to come back about every item in the
   config while the rule findings were correctly limited to the one asked about.
-
 - `/itemforge analyze` (with AI enabled) and `/itemforge generate` no longer lose their result when
   run over RCON. Both finish on a background task, after the RCON response has already been sent,
   so the report used to reach neither the RCON client nor the log. It is now printed to the server
   console, and the RCON client is told to look there.
-
 - The dashboard no longer shows raw colour codes in names. Item, armor and block lists, the
   Overview page and the Texture Studio title printed `&5Void Netherite Sword` as written in the
   config; they now show the plain name, and a block's thumbnail fallback is its first letter
   rather than `&`. The edit forms still show the codes, since that is where you change them.
-
 - Dashboard pages no longer scroll a few pixels past their own layout. A stray third copy of the
   light/dark switch was rendered below the page, which added a scrollbar to pages that fit the
   window and, when scrolled to the bottom, pushed the sidebar up and showed the extra switch.
