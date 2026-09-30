@@ -1,6 +1,7 @@
 package com.hoangluongtran0309.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -59,6 +60,34 @@ class AiItemGenerationServiceTest {
 
         assertTrue(configSource.saved.contains(definition));
         assertEquals(definition, registry.get("new_item").orElseThrow());
+    }
+
+    @Test
+    void generateDraftFailsClearlyWhileNoProviderIsConfigured() {
+        ItemRegistry registry = new ItemRegistry();
+        AiItemGenerationService service = new AiItemGenerationService(null, registry,
+                new ItemConfigLoaderService(new FakeConfigSourcePort(), registry));
+
+        assertFalse(service.isEnabled());
+        AiItemGenerationException exception = assertThrows(AiItemGenerationException.class,
+                () -> service.generateDraft("new_item", "a shiny new item"));
+        assertTrue(exception.getMessage().contains("disabled"));
+    }
+
+    @Test
+    void aProviderSetAfterConstructionIsUsedByTheNextCall() {
+        ItemRegistry registry = new ItemRegistry();
+        AiItemGenerationService service = new AiItemGenerationService(null, registry,
+                new ItemConfigLoaderService(new FakeConfigSourcePort(), registry));
+
+        service.useProvider(new FakeAiItemGeneratorPort());
+
+        assertTrue(service.isEnabled());
+        assertEquals("Generated new_item", service.generateDraft("new_item", "a shiny new item").displayName());
+
+        service.useProvider(null);
+
+        assertFalse(service.isEnabled());
     }
 
     private static AiItemGenerationService newService(ItemRegistry registry, ConfigSourcePort configSource) {

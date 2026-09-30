@@ -17,8 +17,6 @@ import com.hoangluongtran0309.application.ItemConfigLoaderService;
 import com.hoangluongtran0309.application.RecipeConfigLoaderService;
 import com.hoangluongtran0309.application.ServerVersion;
 import com.hoangluongtran0309.application.TextureUploadService;
-import com.hoangluongtran0309.application.port.AiBalanceAnalyzerPort;
-import com.hoangluongtran0309.application.port.AiItemGeneratorPort;
 import com.hoangluongtran0309.application.port.ArmorConfigSourcePort;
 import com.hoangluongtran0309.application.port.ConfigSourcePort;
 import com.hoangluongtran0309.application.port.CustomBlockConfigSourcePort;
@@ -165,9 +163,11 @@ public class ItemForgePlugin extends JavaPlugin {
         pluginManager.registerEvents(new CustomBlockPistonListener(customBlockTagService), this);
         pluginManager.registerEvents(new CustomBlockExplosionListener(customBlockTagService), this);
 
-        AiItemGenerationService aiItemGenerationService = createAiItemGenerationService(itemRegistry, loaderService);
-        ItemBalanceAnalysisService balanceAnalysisService = createBalanceAnalysisService(itemRegistry, armorRegistry,
-                recipeRegistry);
+        AiItemGenerationService aiItemGenerationService = new AiItemGenerationService(null, itemRegistry,
+                loaderService);
+        ItemBalanceAnalysisService balanceAnalysisService = new ItemBalanceAnalysisService(itemRegistry,
+                armorRegistry, recipeRegistry, new BalanceRuleSet(), null);
+        applyAiSettings(aiItemGenerationService, balanceAnalysisService);
 
         startDashboardApiServerIfEnabled(itemRegistry, loaderService, itemStackFactory, aiItemGenerationService,
                 armorRegistry, armorLoaderService, armorStackFactory, recipeRegistry, recipeLoaderService,
@@ -178,7 +178,10 @@ public class ItemForgePlugin extends JavaPlugin {
                 resourcePackBuilder, armorRegistry, armorStackFactory, armorLoaderService,
                 recipeRegistry, recipeLoaderService, recipeRegistrar, aiItemGenerationService,
                 balanceAnalysisService, customBlockRegistry, customBlockStackFactory, customBlockLoaderService,
-                this);
+                () -> {
+                    reloadConfig();
+                    applyAiSettings(aiItemGenerationService, balanceAnalysisService);
+                }, this);
         getCommand("itemforge").setExecutor(command);
         getCommand("itemforge").setTabCompleter(command);
     }
@@ -254,28 +257,22 @@ public class ItemForgePlugin extends JavaPlugin {
         return new RecipeConfigLoaderService(configSource, recipeRegistry);
     }
 
-    // Returns null when ai.enabled = false in config.yml; ItemForgeCommand handles that
-    // case with a clear message to the admin instead of a NullPointerException.
-    private AiItemGenerationService createAiItemGenerationService(ItemRegistry itemRegistry,
-            ItemConfigLoaderService loaderService) {
+    // Reads the ai section and points both AI features at it. Called on enable and again on
+    // /itemforge reload, which is what lets an admin change the provider, key or model (or turn
+    // AI on and off) without a restart. With ai.enabled = false both services stay in place
+    // with no provider: generation reports itself disabled and the balance analysis runs on
+    // its rules alone, which need no provider and cost nothing.
+    private void applyAiSettings(AiItemGenerationService aiItemGenerationService,
+            ItemBalanceAnalysisService balanceAnalysisService) {
         if (!getConfig().getBoolean("ai.enabled", false)) {
-            return null;
+            aiItemGenerationService.useProvider(null);
+            balanceAnalysisService.useAiPort(null);
+            return;
         }
 
-        AiItemGeneratorPort aiPort = new AiItemGenerator(createStructuredAiClient());
-        return new AiItemGenerationService(aiPort, itemRegistry, loaderService);
-    }
-
-    // Unlike item generation this service is always created: its rule findings need no provider
-    // and cost nothing, so ai.enabled only decides whether the AI layer is added on top.
-    private ItemBalanceAnalysisService createBalanceAnalysisService(ItemRegistry itemRegistry,
-            ArmorRegistry armorRegistry, RecipeRegistry recipeRegistry) {
-        AiBalanceAnalyzerPort aiPort = getConfig().getBoolean("ai.enabled", false)
-                ? new ItemBalanceAnalyzer(createStructuredAiClient(), getLogger())
-                : null;
-
-        return new ItemBalanceAnalysisService(itemRegistry, armorRegistry, recipeRegistry, new BalanceRuleSet(),
-                aiPort);
+        StructuredAiClient client = createStructuredAiClient();
+        aiItemGenerationService.useProvider(new AiItemGenerator(client));
+        balanceAnalysisService.useAiPort(new ItemBalanceAnalyzer(client, getLogger()));
     }
 
     // Both AI features share one provider, one key and one set of limits, so they share this

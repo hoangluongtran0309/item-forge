@@ -19,6 +19,7 @@ import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 import org.mockbukkit.mockbukkit.plugin.PluginMock;
 
+import com.hoangluongtran0309.application.AiItemGenerationService;
 import com.hoangluongtran0309.application.ArmorConfigLoaderService;
 import com.hoangluongtran0309.application.CustomBlockLoaderService;
 import com.hoangluongtran0309.application.ItemBalanceAnalysisService;
@@ -62,6 +63,8 @@ class ItemForgeCommandTest {
     private CustomBlockRegistry customBlockRegistry;
     private ItemForgeCommand command;
     private FakeResourcePackPort resourcePackPort;
+    private int settingsReloads;
+    private boolean failOnSettingsReload;
 
     @BeforeEach
     void setUp() {
@@ -96,13 +99,15 @@ class ItemForgeCommandTest {
 
         // Null AI ports throughout: /itemforge generate is disabled, and /itemforge analyze runs
         // on rules alone, which is the path an admin without an API key actually gets.
+        AiItemGenerationService aiItemGenerationService = new AiItemGenerationService(null, itemRegistry,
+                loaderService);
         ItemBalanceAnalysisService balanceAnalysisService = new ItemBalanceAnalysisService(itemRegistry,
                 armorRegistry, recipeRegistry, new BalanceRuleSet(), null);
 
         command = new ItemForgeCommand(itemRegistry, itemStackFactory, loaderService, resourcePackPort,
                 armorRegistry, armorStackFactory, armorLoaderService, recipeRegistry, recipeLoaderService,
-                recipeRegistrar, null, balanceAnalysisService, customBlockRegistry, customBlockStackFactory,
-                customBlockLoaderService, plugin);
+                recipeRegistrar, aiItemGenerationService, balanceAnalysisService, customBlockRegistry,
+                customBlockStackFactory, customBlockLoaderService, this::reloadSettings, plugin);
     }
 
     @AfterEach
@@ -131,6 +136,24 @@ class ItemForgeCommandTest {
     }
 
     @Test
+    void reloadRereadsTheSettingsAlongWithTheContent() {
+        assertTrue(command.onCommand(player, mockCommand(), "itemforge", new String[] { "reload" }));
+
+        assertEquals(1, settingsReloads);
+    }
+
+    @Test
+    void reloadReportsCleanErrorWhenTheSettingsCannotBeReread() {
+        failOnSettingsReload = true;
+
+        assertTrue(command.onCommand(player, mockCommand(), "itemforge", new String[] { "reload" }));
+
+        String message = player.nextMessage();
+        assertNotNull(message);
+        assertTrue(message.startsWith("Reload failed:"));
+    }
+
+    @Test
     void listIncludesAbilitiesForEachItem() {
         itemRegistry.register(new ItemDefinition("void_pickaxe", "NETHERITE_PICKAXE", 1, "Power Axe", List.of(),
                 List.of(new DamageBonusAbilityDefinition(TriggerType.ON_HIT, 10, 15.0))));
@@ -156,7 +179,7 @@ class ItemForgeCommandTest {
     }
 
     @Test
-    void generateReportsDisabledWhenAiServiceIsNull() {
+    void generateReportsDisabledWhenNoProviderIsConfigured() {
         assertTrue(command.onCommand(player, mockCommand(), "itemforge",
                 new String[] { "generate", "test_item", "a", "shiny", "sword" }));
 
@@ -242,6 +265,13 @@ class ItemForgeCommandTest {
         return new ItemDefinition("void_sword", "NETHERITE_SWORD", 1, "Void Sword", List.of(),
                 List.of(new PotionEffectAbilityDefinition(TriggerType.RIGHT_CLICK,
                         EffectCommand.EffectType.SPEED, 60, 30)));
+    }
+
+    private void reloadSettings() {
+        if (failOnSettingsReload) {
+            throw new IllegalStateException("config.yml is not valid YAML");
+        }
+        settingsReloads++;
     }
 
     private Command mockCommand() {

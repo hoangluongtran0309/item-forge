@@ -33,7 +33,9 @@ public class ItemBalanceAnalysisService {
     private final ArmorRegistry armorRegistry;
     private final RecipeRegistry recipeRegistry;
     private final BalanceRuleSet rules;
-    private final AiBalanceAnalyzerPort aiPort;
+    // Read from the async thread that runs the analysis and replaced from the main thread on
+    // /itemforge reload, hence volatile.
+    private volatile AiBalanceAnalyzerPort aiPort;
 
     /**
      * @param aiPort null when ai.enabled is false in config.yml, matching how the item
@@ -52,6 +54,15 @@ public class ItemBalanceAnalysisService {
         return aiPort != null;
     }
 
+    /**
+     * Swaps the AI layer in place, so a changed ai section in config.yml takes effect on reload.
+     *
+     * @param aiPort null to fall back to the rules alone
+     */
+    public void useAiPort(AiBalanceAnalyzerPort aiPort) {
+        this.aiPort = aiPort;
+    }
+
     public BalanceReport analyzeAll() {
         return analyze(snapshot());
     }
@@ -67,13 +78,14 @@ public class ItemBalanceAnalysisService {
 
     private BalanceReport analyze(BalanceAnalysisRequest request) {
         List<BalanceFinding> ruleFindings = rules.evaluate(request);
-        if (aiPort == null) {
+        AiBalanceAnalyzerPort port = aiPort;
+        if (port == null) {
             return BalanceReport.of(summaryOf(request, ruleFindings), ruleFindings);
         }
 
         List<BalanceFinding> combined = new ArrayList<>(ruleFindings);
         try {
-            BalanceReport aiReport = aiPort.analyze(request, ruleFindings);
+            BalanceReport aiReport = port.analyze(request, ruleFindings);
             combined.addAll(withRuleDuplicatesRemoved(aiReport.findings(), ruleFindings));
             if (!aiReport.summary().isBlank()) {
                 combined.add(new BalanceFinding(BalanceFinding.WHOLE_CONFIG, BalanceSeverity.INFO, AI_SUMMARY_RULE,
