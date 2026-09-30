@@ -30,6 +30,7 @@ import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.plugin.PluginMock;
 import org.yaml.snakeyaml.Yaml;
 
+import com.hoangluongtran0309.application.AiItemGenerationService;
 import com.hoangluongtran0309.application.ArmorConfigLoaderService;
 import com.hoangluongtran0309.application.CustomBlockLoaderService;
 import com.hoangluongtran0309.application.ItemBalanceAnalysisService;
@@ -100,8 +101,9 @@ class DashboardApiServerTest {
                 Logger.getAnonymousLogger());
         TextureUploadService textureUploadService = new TextureUploadService(textureStoragePort, resourcePackPort);
 
-        ItemsApiHandler itemsHandler = new ItemsApiHandler(itemRegistry, loaderService, itemStackFactory, null,
-                textureUploadService, MAX_UPLOAD_BYTES);
+        ItemsApiHandler itemsHandler = new ItemsApiHandler(itemRegistry, loaderService, itemStackFactory,
+                new AiItemGenerationService(null, itemRegistry, loaderService), textureUploadService,
+                MAX_UPLOAD_BYTES);
         ArmorApiHandler armorHandler = new ArmorApiHandler(armorRegistry, armorLoaderService, armorStackFactory,
                 textureUploadService, MAX_UPLOAD_BYTES);
 

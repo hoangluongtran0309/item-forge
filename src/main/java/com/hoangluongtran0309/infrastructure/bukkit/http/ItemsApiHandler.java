@@ -174,7 +174,7 @@ public class ItemsApiHandler implements ApiResourceHandler {
     }
 
     private void generate(HttpExchange exchange) throws IOException {
-        if (aiItemGenerationService == null) {
+        if (!aiItemGenerationService.isEnabled()) {
             throw new ApiException(400, "AI item generation is disabled");
         }
 

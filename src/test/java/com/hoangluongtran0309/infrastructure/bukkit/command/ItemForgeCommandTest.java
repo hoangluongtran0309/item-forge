@@ -5,20 +5,26 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.lang.reflect.Proxy;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
 import org.bukkit.command.Command;
+import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockbukkit.mockbukkit.MockBukkit;
+import org.mockbukkit.mockbukkit.ServerMock;
+import org.mockbukkit.mockbukkit.command.ConsoleCommandSenderMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 import org.mockbukkit.mockbukkit.plugin.PluginMock;
 
+import com.hoangluongtran0309.application.AiItemGenerationService;
 import com.hoangluongtran0309.application.ArmorConfigLoaderService;
 import com.hoangluongtran0309.application.CustomBlockLoaderService;
 import com.hoangluongtran0309.application.ItemBalanceAnalysisService;
@@ -34,6 +40,7 @@ import com.hoangluongtran0309.domain.ArmorRegistry;
 import com.hoangluongtran0309.domain.CustomBlockRegistry;
 import com.hoangluongtran0309.domain.ItemRegistry;
 import com.hoangluongtran0309.domain.RecipeRegistry;
+import com.hoangluongtran0309.domain.balance.BalanceReport;
 import com.hoangluongtran0309.domain.balance.BalanceRuleSet;
 import com.hoangluongtran0309.domain.model.ArmorDefinition;
 import com.hoangluongtran0309.domain.model.ArmorSlot;
@@ -54,6 +61,7 @@ import com.hoangluongtran0309.infrastructure.bukkit.recipe.RecipeRegistrar;
 
 class ItemForgeCommandTest {
 
+    private ServerMock server;
     private PluginMock plugin;
     private PlayerMock player;
     private ItemRegistry itemRegistry;
@@ -62,10 +70,14 @@ class ItemForgeCommandTest {
     private CustomBlockRegistry customBlockRegistry;
     private ItemForgeCommand command;
     private FakeResourcePackPort resourcePackPort;
+    private AiItemGenerationService aiItemGenerationService;
+    private ItemBalanceAnalysisService balanceAnalysisService;
+    private int settingsReloads;
+    private boolean failOnSettingsReload;
 
     @BeforeEach
     void setUp() {
-        var server = MockBukkit.mock();
+        server = MockBukkit.mock();
         plugin = MockBukkit.createMockPlugin("ItemForge");
         player = server.addPlayer();
 
@@ -96,13 +108,15 @@ class ItemForgeCommandTest {
 
         // Null AI ports throughout: /itemforge generate is disabled, and /itemforge analyze runs
         // on rules alone, which is the path an admin without an API key actually gets.
-        ItemBalanceAnalysisService balanceAnalysisService = new ItemBalanceAnalysisService(itemRegistry,
+        aiItemGenerationService = new AiItemGenerationService(null, itemRegistry,
+                loaderService);
+        balanceAnalysisService = new ItemBalanceAnalysisService(itemRegistry,
                 armorRegistry, recipeRegistry, new BalanceRuleSet(), null);
 
         command = new ItemForgeCommand(itemRegistry, itemStackFactory, loaderService, resourcePackPort,
                 armorRegistry, armorStackFactory, armorLoaderService, recipeRegistry, recipeLoaderService,
-                recipeRegistrar, null, balanceAnalysisService, customBlockRegistry, customBlockStackFactory,
-                customBlockLoaderService, plugin);
+                recipeRegistrar, aiItemGenerationService, balanceAnalysisService, customBlockRegistry,
+                customBlockStackFactory, customBlockLoaderService, this::reloadSettings, plugin);
     }
 
     @AfterEach
@@ -131,6 +145,24 @@ class ItemForgeCommandTest {
     }
 
     @Test
+    void reloadRereadsTheSettingsAlongWithTheContent() {
+        assertTrue(command.onCommand(player, mockCommand(), "itemforge", new String[] { "reload" }));
+
+        assertEquals(1, settingsReloads);
+    }
+
+    @Test
+    void reloadReportsCleanErrorWhenTheSettingsCannotBeReread() {
+        failOnSettingsReload = true;
+
+        assertTrue(command.onCommand(player, mockCommand(), "itemforge", new String[] { "reload" }));
+
+        String message = player.nextMessage();
+        assertNotNull(message);
+        assertTrue(message.startsWith("Reload failed:"));
+    }
+
+    @Test
     void listIncludesAbilitiesForEachItem() {
         itemRegistry.register(new ItemDefinition("void_pickaxe", "NETHERITE_PICKAXE", 1, "Power Axe", List.of(),
                 List.of(new DamageBonusAbilityDefinition(TriggerType.ON_HIT, 10, 15.0))));
@@ -156,7 +188,7 @@ class ItemForgeCommandTest {
     }
 
     @Test
-    void generateReportsDisabledWhenAiServiceIsNull() {
+    void generateReportsDisabledWhenNoProviderIsConfigured() {
         assertTrue(command.onCommand(player, mockCommand(), "itemforge",
                 new String[] { "generate", "test_item", "a", "shiny", "sword" }));
 
@@ -217,6 +249,46 @@ class ItemForgeCommandTest {
     }
 
     @Test
+    void analyzeOverRconPrintsTheAiBackedReportToTheServerConsole() {
+        itemRegistry.register(permanentSpeedSword());
+        balanceAnalysisService.useAiPort((request, ruleFindings) -> BalanceReport.of("", List.of()));
+        List<String> rconReplies = new ArrayList<>();
+
+        assertTrue(command.onCommand(rconSender(rconReplies), mockCommand(), "itemforge",
+                new String[] { "analyze" }));
+        runScheduledTasks();
+
+        assertTrue(rconReplies.stream().anyMatch(reply -> reply.contains("server console")));
+        assertTrue(drain(console()).stream().anyMatch(line -> line.startsWith("[CRITICAL] void_sword")));
+    }
+
+    @Test
+    void analyzeFromAPlayerStillRepliesToThatPlayerWhenAiIsEnabled() {
+        itemRegistry.register(permanentSpeedSword());
+        balanceAnalysisService.useAiPort((request, ruleFindings) -> BalanceReport.of("", List.of()));
+
+        assertTrue(command.onCommand(player, mockCommand(), "itemforge", new String[] { "analyze" }));
+        runScheduledTasks();
+
+        assertTrue(drain(player).stream().anyMatch(line -> line.startsWith("[CRITICAL] void_sword")));
+        assertTrue(drain(console()).isEmpty());
+    }
+
+    @Test
+    void generateOverRconPrintsTheOutcomeToTheServerConsole() {
+        aiItemGenerationService.useProvider((itemId, description) -> new ItemDefinition(itemId, "STICK", 0,
+                "Generated " + itemId, List.of(), List.of()));
+        List<String> rconReplies = new ArrayList<>();
+
+        assertTrue(command.onCommand(rconSender(rconReplies), mockCommand(), "itemforge",
+                new String[] { "generate", "test_item", "a", "plain", "stick" }));
+        runScheduledTasks();
+
+        assertTrue(rconReplies.stream().anyMatch(reply -> reply.contains("server console")));
+        assertTrue(drain(console()).stream().anyMatch(line -> line.startsWith("Created item 'test_item'")));
+    }
+
+    @Test
     void analyzeTabCompletesItemAndArmorIds() {
         itemRegistry.register(permanentSpeedSword());
         armorRegistry.register(new ArmorDefinition("void_helmet", "NETHERITE_HELMET", ArmorSlot.HELMET,
@@ -242,6 +314,51 @@ class ItemForgeCommandTest {
         return new ItemDefinition("void_sword", "NETHERITE_SWORD", 1, "Void Sword", List.of(),
                 List.of(new PotionEffectAbilityDefinition(TriggerType.RIGHT_CLICK,
                         EffectCommand.EffectType.SPEED, 60, 30)));
+    }
+
+    // The async half of a command, then the sync task it schedules to report back.
+    private void runScheduledTasks() {
+        server.getScheduler().waitAsyncTasksFinished();
+        server.getScheduler().performOneTick();
+    }
+
+    private ConsoleCommandSenderMock console() {
+        return (ConsoleCommandSenderMock) server.getConsoleSender();
+    }
+
+    private static List<String> drain(org.mockbukkit.mockbukkit.command.MessageTarget target) {
+        List<String> messages = new ArrayList<>();
+        for (String message = target.nextMessage(); message != null; message = target.nextMessage()) {
+            messages.add(message);
+        }
+        return messages;
+    }
+
+    // MockBukkit has no RCON sender, and only sendMessage(String) matters here.
+    private static RemoteConsoleCommandSender rconSender(List<String> received) {
+        return (RemoteConsoleCommandSender) Proxy.newProxyInstance(
+                RemoteConsoleCommandSender.class.getClassLoader(),
+                new Class<?>[] { RemoteConsoleCommandSender.class },
+                (proxy, method, args) -> {
+                    if (method.getName().equals("sendMessage") && args.length == 1 && args[0] instanceof String text) {
+                        received.add(text);
+                    }
+                    Class<?> returnType = method.getReturnType();
+                    if (returnType == boolean.class) {
+                        return false;
+                    }
+                    if (returnType == String.class) {
+                        return "Rcon";
+                    }
+                    return null;
+                });
+    }
+
+    private void reloadSettings() {
+        if (failOnSettingsReload) {
+            throw new IllegalStateException("config.yml is not valid YAML");
+        }
+        settingsReloads++;
     }
 
     private Command mockCommand() {

@@ -37,7 +37,7 @@
                                  sizeClass='w-10 h-10 text-sm',
                                  fallbackLetter=${#strings.substring(item.material(), 0, 1)})}"></div>
                         <div class="min-w-0 flex-1">
-                            <p class="truncate font-medium" th:text="${item.displayName()}">Display Name</p>
+                            <p class="truncate font-medium" th:text="${item.plainDisplayName()}">Display Name</p>
                             <p class="itemforge-tech-label truncate" th:text="${item.id()}">id</p>
                         </div>
                         <a th:href="@{/items/{id}/edit(id=${item.id()})}" class="btn btn-ghost btn-xs">Edit</a>
@@ -60,9 +60,9 @@
                         <div th:replace="~{fragments/texture-thumb :: thumb(
                                  url=@{/blocks/{id}/texture(id=${block.id()})},
                                  sizeClass='w-10 h-10 text-sm',
-                                 fallbackLetter=${#strings.substring(block.displayName(), 0, 1)})}"></div>
+                                 fallbackLetter=${#strings.isEmpty(block.plainDisplayName()) ? '?' : #strings.substring(block.plainDisplayName(), 0, 1)})}"></div>
                         <div class="min-w-0 flex-1">
-                            <p class="truncate font-medium" th:text="${block.displayName()}">Display Name</p>
+                            <p class="truncate font-medium" th:text="${block.plainDisplayName()}">Display Name</p>
                             <p class="itemforge-tech-label truncate"
                                th:text="${block.instrument()} + ' · note ' + ${block.note()}">INSTRUMENT · note 0</p>
                         </div>

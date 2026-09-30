@@ -7,6 +7,38 @@ section below is published verbatim as the notes of the matching GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-30
+
+A bug-fix release. Requirements are unchanged from 1.0.0 and no configuration needs editing to
+upgrade: replace the plugin jar (and the dashboard jar, if you run it) and restart.
+
+### Fixed
+
+- `/itemforge reload` now re-reads the `ai` section of `config.yml`. Changing the provider, key or
+  model, or turning AI on or off, used to be silently ignored until the server was restarted, even
+  though the README said `reload` covered `config.yml`. The `resource-pack`, `hud` and
+  `dashboard-api` settings still need a restart, and the README now says so.
+- Narrowing a balance report to one id (`/itemforge analyze <id>`, or the box on the dashboard's
+  Balance page) now narrows the AI findings too. They used to come back about every item in the
+  config while the rule findings were correctly limited to the one asked about.
+- `/itemforge analyze` (with AI enabled) and `/itemforge generate` no longer lose their result when
+  run over RCON. Both finish on a background task, after the RCON response has already been sent,
+  so the report used to reach neither the RCON client nor the log. It is now printed to the server
+  console, and the RCON client is told to look there.
+- The dashboard no longer shows raw colour codes in names. Item, armor and block lists, the
+  Overview page and the Texture Studio title printed `&5Void Netherite Sword` as written in the
+  config; they now show the plain name, and a block's thumbnail fallback is its first letter
+  rather than `&`. The edit forms still show the codes, since that is where you change them.
+- Dashboard pages no longer scroll a few pixels past their own layout. A stray third copy of the
+  light/dark switch was rendered below the page, which added a scrollbar to pages that fit the
+  window and, when scrolled to the bottom, pushed the sidebar up and showed the extra switch.
+
+### Documentation
+
+- Added [`docs/showcase/`](https://github.com/hoangluongtran0309/item-forge/blob/main/docs/showcase/README.md), a walkthrough of the plugin in game and of
+  the dashboard, Texture Studio, balance analysis, and AI generation, in screenshots and GIFs
+  captured from a real run.
+
 ## [1.0.0] - 2026-09-02
 
 First public release.
@@ -185,5 +217,6 @@ surfaced at runtime rather than failing silently:
   heavy use and report anything odd via
   [GitHub Issues](https://github.com/hoangluongtran0309/item-forge/issues).
 
-[Unreleased]: https://github.com/hoangluongtran0309/item-forge/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/hoangluongtran0309/item-forge/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/hoangluongtran0309/item-forge/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/hoangluongtran0309/item-forge/releases/tag/v1.0.0

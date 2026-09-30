@@ -7,15 +7,34 @@ import com.hoangluongtran0309.domain.model.ItemDefinition;
 
 public class AiItemGenerationService {
 
-    private final AiItemGeneratorPort aiPort;
+    // Read from the async thread that runs generateDraft and replaced from the main thread
+    // on /itemforge reload, hence volatile.
+    private volatile AiItemGeneratorPort aiPort;
     private final ItemRegistry registry;
     private final ItemConfigLoaderService loaderService;
 
+    /**
+     * @param aiPort null when ai.enabled is false in config.yml
+     */
     public AiItemGenerationService(AiItemGeneratorPort aiPort, ItemRegistry registry,
             ItemConfigLoaderService loaderService) {
         this.aiPort = aiPort;
         this.registry = registry;
         this.loaderService = loaderService;
+    }
+
+    public boolean isEnabled() {
+        return aiPort != null;
+    }
+
+    /**
+     * Swaps the provider in place, so a changed ai section in config.yml takes effect on reload
+     * without rebuilding everything that already holds this service.
+     *
+     * @param aiPort null to turn generation off
+     */
+    public void useProvider(AiItemGeneratorPort aiPort) {
+        this.aiPort = aiPort;
     }
 
     /**
@@ -24,11 +43,16 @@ public class AiItemGenerationService {
      * the material is valid.
      */
     public ItemDefinition generateDraft(String itemId, String description) {
+        AiItemGeneratorPort port = aiPort;
+        if (port == null) {
+            throw new AiItemGenerationException("AI item generation is disabled");
+        }
+
         if (registry.get(itemId).isPresent()) {
             throw new AiItemGenerationException("Item id '" + itemId + "' already exists");
         }
 
-        ItemDefinition draft = aiPort.generateDraft(itemId, description);
+        ItemDefinition draft = port.generateDraft(itemId, description);
         int customModelData = registry.nextAvailableCustomModelData();
 
         return new ItemDefinition(draft.id(), draft.material(), customModelData, draft.displayName(),

@@ -1,6 +1,7 @@
 package com.hoangluongtran0309.itemforge.dashboard.web;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -42,6 +43,17 @@ class ItemControllerTest {
 
     @MockitoBean
     private ItemApiClient itemApiClient;
+
+    @Test
+    @WithMockUser
+    void listShowsNamesWithoutMinecraftColourCodes() throws Exception {
+        when(itemApiClient.findAll()).thenReturn(List.of(
+                new ItemJson("void_sword", "NETHERITE_SWORD", 1, "&5Void Netherite Sword", List.of(), List.of())));
+
+        mockMvc.perform(get("/items"))
+                .andExpect(content().string(containsString("Void Netherite Sword")))
+                .andExpect(content().string(not(containsString("&amp;5"))));
+    }
 
     @Test
     @WithMockUser

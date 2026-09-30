@@ -1,6 +1,8 @@
 package com.hoangluongtran0309.itemforge.dashboard.web;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -54,6 +56,33 @@ class HomeControllerTest {
         when(armorApiClient.findAll()).thenReturn(List.of());
         when(blockApiClient.findAll()).thenReturn(List.of());
         when(recipeApiClient.findAll()).thenReturn(List.of());
+    }
+
+    @Test
+    @WithMockUser
+    void theThemeSwitchIsRenderedOnlyWhereItIsUsed() throws Exception {
+        String html = mockMvc.perform(get("/")).andReturn().getResponse().getContentAsString();
+
+        // One in the mobile header, one in the sidebar footer. A third copy means the fragment's
+        // own definition leaked into the page, where it sits below the layout and adds a scrollbar.
+        assertEquals(2, html.split("class=\"theme-toggle\"", -1).length - 1);
+    }
+
+    @Test
+    @WithMockUser
+    void namesAreShownWithoutMinecraftColourCodes() throws Exception {
+        when(itemApiClient.findAll()).thenReturn(List.of(
+                new ItemJson("void_sword", "NETHERITE_SWORD", 1, "&5Void Netherite Sword", List.of(), List.of())));
+        when(blockApiClient.findAll()).thenReturn(List.of(
+                new BlockJson("void_block", "BASS_GUITAR", 12, "void_block", "GLOWSTONE", "&5Void Netherite Block",
+                        2001, List.of())));
+
+        mockMvc.perform(get("/"))
+                .andExpect(content().string(containsString("Void Netherite Sword")))
+                .andExpect(content().string(containsString("Void Netherite Block")))
+                .andExpect(content().string(not(containsString("&amp;5"))))
+                // The block thumbnail falls back to the first letter of the name, not to "&".
+                .andExpect(content().string(containsString("thumb-fallback hidden\">V<")));
     }
 
     @Test
