@@ -7,6 +7,8 @@ section below is published verbatim as the notes of the matching GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-30
+
 ### Fixed
 
 - `/itemforge reload` now re-reads the `ai` section of `config.yml`. Changing the provider, key or
