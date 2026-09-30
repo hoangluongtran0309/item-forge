@@ -17,6 +17,11 @@ section below is published verbatim as the notes of the matching GitHub Release.
   Balance page) now narrows the AI findings too. They used to come back about every item in the
   config while the rule findings were correctly limited to the one asked about.
 
+- `/itemforge analyze` (with AI enabled) and `/itemforge generate` no longer lose their result when
+  run over RCON. Both finish on a background task, after the RCON response has already been sent,
+  so the report used to reach neither the RCON client nor the log. It is now printed to the server
+  console, and the RCON client is told to look there.
+
 ### Documentation
 
 - Added [`docs/showcase/`](docs/showcase/README.md), a walkthrough of the plugin in game and of
