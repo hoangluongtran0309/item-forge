@@ -125,11 +125,7 @@ class ItemBalanceAnalysisServiceTest {
     @Test
     void anAiFindingAboutAnUntouchedTargetIsKept() {
         itemRegistry.register(permanentSpeedSword());
-        itemRegistry.register(new ItemDefinition("void_axe", "NETHERITE_AXE", 2, "Axe", List.of(),
-                List.of(new PotionEffectAbilityDefinition(TriggerType.RIGHT_CLICK,
-                        EffectCommand.EffectType.SPEED, 1, 600))));
-        recipeRegistry.register(new ShapelessRecipeDefinition("void_axe", "void_axe", 1,
-                List.of("NETHERITE_INGOT", "NETHERITE_INGOT")));
+        registerBalancedAxe();
         FakeAiBalanceAnalyzerPort aiPort = new FakeAiBalanceAnalyzerPort(BalanceReport.of("",
                 List.of(new BalanceFinding("void_axe", BalanceSeverity.WARNING, "THEME",
                         "Nothing about the axe justifies its price.", "Give it an ability.",
@@ -214,6 +210,47 @@ class ItemBalanceAnalysisServiceTest {
     }
 
     @Test
+    void whenNarrowedAnAiFindingAboutAnotherIdIsDiscarded() {
+        itemRegistry.register(permanentSpeedSword());
+        registerBalancedAxe();
+        FakeAiBalanceAnalyzerPort aiPort = new FakeAiBalanceAnalyzerPort(BalanceReport.of("",
+                List.of(new BalanceFinding("void_axe", BalanceSeverity.WARNING, "THEME",
+                        "Nothing about the axe justifies its price.", "Give it an ability.",
+                        FindingSource.AI))));
+
+        BalanceReport report = service(aiPort).analyzeTarget("void_sword");
+
+        assertTrue(report.findings().stream().noneMatch(finding -> finding.targetId().equals("void_axe")));
+    }
+
+    @Test
+    void whenNarrowedAnAiFindingAboutTheTargetItselfIsKept() {
+        itemRegistry.register(permanentSpeedSword());
+        registerBalancedAxe();
+        FakeAiBalanceAnalyzerPort aiPort = new FakeAiBalanceAnalyzerPort(BalanceReport.of("",
+                List.of(new BalanceFinding("void_axe", BalanceSeverity.WARNING, "THEME",
+                        "Nothing about the axe justifies its price.", "Give it an ability.",
+                        FindingSource.AI))));
+
+        BalanceReport report = service(aiPort).analyzeTarget("void_axe");
+
+        assertTrue(report.findings().stream().anyMatch(finding -> finding.rule().equals("THEME")));
+    }
+
+    @Test
+    void whenNarrowedAnAiFindingAboutTheWholeConfigIsStillKept() {
+        itemRegistry.register(permanentSpeedSword());
+        FakeAiBalanceAnalyzerPort aiPort = new FakeAiBalanceAnalyzerPort(BalanceReport.of("",
+                List.of(new BalanceFinding(BalanceFinding.WHOLE_CONFIG, BalanceSeverity.WARNING, "PROGRESSION",
+                        "Every item sits at the top tier, so there is no progression.",
+                        "Add lower-tier gear.", FindingSource.AI))));
+
+        BalanceReport report = service(aiPort).analyzeTarget("void_sword");
+
+        assertTrue(report.findings().stream().anyMatch(finding -> finding.rule().equals("PROGRESSION")));
+    }
+
+    @Test
     void analyzingAnArmorPieceByIdIsAllowed() {
         armorRegistry.register(new ArmorDefinition("void_helmet", "NETHERITE_HELMET", ArmorSlot.HELMET,
                 "void_armor", 1, "Helmet", List.of()));
@@ -234,6 +271,15 @@ class ItemBalanceAnalysisServiceTest {
     private ItemBalanceAnalysisService service(AiBalanceAnalyzerPort aiPort) {
         return new ItemBalanceAnalysisService(itemRegistry, armorRegistry, recipeRegistry, new BalanceRuleSet(),
                 aiPort);
+    }
+
+    /** An item the rules have nothing to say about, so only the AI can produce a finding for it. */
+    private void registerBalancedAxe() {
+        itemRegistry.register(new ItemDefinition("void_axe", "NETHERITE_AXE", 2, "Axe", List.of(),
+                List.of(new PotionEffectAbilityDefinition(TriggerType.RIGHT_CLICK,
+                        EffectCommand.EffectType.SPEED, 1, 600))));
+        recipeRegistry.register(new ShapelessRecipeDefinition("void_axe", "void_axe", 1,
+                List.of("NETHERITE_INGOT", "NETHERITE_INGOT")));
     }
 
     private static ItemDefinition permanentSpeedSword() {

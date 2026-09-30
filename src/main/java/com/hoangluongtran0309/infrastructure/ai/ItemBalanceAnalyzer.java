@@ -30,7 +30,8 @@ import com.hoangluongtran0309.infrastructure.json.JsonWriter;
  * invented projection. What the rules already found is sent along too, and the prompt asks for
  * what those rules cannot see. That is a request, not a guarantee -- models restate rule findings
  * anyway -- so ItemBalanceAnalysisService discards the ones that come back about an already
- * covered id; the prompt says so, to keep the model from spending its output on them.
+ * covered id, and the ones about ids outside a narrowed request; the prompt says so, to keep the
+ * model from spending its output on them.
  */
 public class ItemBalanceAnalyzer implements AiBalanceAnalyzerPort {
 
@@ -50,7 +51,9 @@ public class ItemBalanceAnalyzer implements AiBalanceAnalyzerPort {
             + "and recipes that are too cheap or too expensive for what they produce. Any finding you return "
             + "about an id that already appears in rule-findings is DISCARDED before the admin sees it, so "
             + "spend your findings on the other ids, or use the target-id \"*\" for something about the config "
-            + "as a whole. Each finding must name a real id from the input and quote the actual numbers. Prefer "
+            + "as a whole. When the input carries report-only-on, the admin asked about that one id: the rest "
+            + "of the config is there for comparison, and findings about any other id are DISCARDED too. "
+            + "Each finding must name a real id from the input and quote the actual numbers. Prefer "
             + "a handful of specific findings over an exhaustive list, and return no findings at all if the "
             + "config is well balanced.";
 
