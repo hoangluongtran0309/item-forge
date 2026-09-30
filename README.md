@@ -16,6 +16,11 @@ handles the gameplay logic (abilities, cooldowns) at runtime.
   missing cooldowns, gear that costs nothing to craft — with no API key needed.
 - Optional AI-assisted item generation and an optional web dashboard, both off by default.
 
+![Right-clicking a custom sword grants Speed and starts its cooldown bar](docs/showcase/ingame-ability.gif)
+
+**[See it in action →](docs/showcase/README.md)** — items, armor, recipes, and blocks in game,
+plus the dashboard, Texture Studio, balance analysis, and AI generation, in screenshots and GIFs.
+
 ## Compatibility
 
 | Requirement | Value |
