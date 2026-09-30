@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -179,6 +180,7 @@ public class ItemForgeCommand implements CommandExecutor, TabCompleter {
         String id = args[1];
         String description = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
         sender.sendMessage("Generating item '" + id + "'...");
+        CommandSender replyTo = lateReplyTarget(sender);
 
         // The API call is blocking I/O, so it has to run asynchronously to avoid freezing
         // the server's main thread. The result is brought back onto the main thread before
@@ -189,10 +191,10 @@ public class ItemForgeCommand implements CommandExecutor, TabCompleter {
                 draft = aiItemGenerationService.generateDraft(id, description);
             } catch (RuntimeException e) {
                 Bukkit.getScheduler().runTask(plugin,
-                        () -> sender.sendMessage("Generation failed: " + e.getMessage()));
+                        () -> replyTo.sendMessage("Generation failed: " + e.getMessage()));
                 return;
             }
-            Bukkit.getScheduler().runTask(plugin, () -> finishGenerate(sender, id, draft));
+            Bukkit.getScheduler().runTask(plugin, () -> finishGenerate(replyTo, id, draft));
         });
     }
 
@@ -231,6 +233,7 @@ public class ItemForgeCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(targetId.isEmpty()
                 ? "Analyzing every registered item..."
                 : "Analyzing '" + targetId + "'...");
+        CommandSender replyTo = lateReplyTarget(sender);
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             BalanceReport report;
@@ -238,11 +241,22 @@ public class ItemForgeCommand implements CommandExecutor, TabCompleter {
                 report = analyze(targetId);
             } catch (RuntimeException e) {
                 Bukkit.getScheduler().runTask(plugin,
-                        () -> sender.sendMessage("Analysis failed: " + e.getMessage()));
+                        () -> replyTo.sendMessage("Analysis failed: " + e.getMessage()));
                 return;
             }
-            Bukkit.getScheduler().runTask(plugin, () -> sendReport(sender, report));
+            Bukkit.getScheduler().runTask(plugin, () -> sendReport(replyTo, report));
         });
+    }
+
+    // An RCON connection only carries what is sent before the command returns, so a result
+    // that arrives from a background task would reach nobody -- not the RCON client, not the
+    // log. Those go to the server console instead, and the RCON client is told where to look.
+    private CommandSender lateReplyTarget(CommandSender sender) {
+        if (!(sender instanceof RemoteConsoleCommandSender)) {
+            return sender;
+        }
+        sender.sendMessage("The result will be printed to the server console.");
+        return Bukkit.getConsoleSender();
     }
 
     private void runAnalysis(CommandSender sender, String targetId) {
