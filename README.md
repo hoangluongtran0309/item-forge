@@ -39,7 +39,8 @@ Modern strategy automatically.
    `mvn clean package`, jar appears in `target/`).
 2. Copy the jar into your Paper server's `plugins/` directory.
 3. Start (or restart) the server, then edit the generated `plugins/ItemForge/config.yml` as
-   needed (see [Configuration](#configuration) below) and run `/itemforge reload`.
+   needed (see [Configuration](#configuration) below) and restart once more. Later changes to
+   content files and to the `ai` section only need `/itemforge reload`.
 
 > Prefer Docker? See the [Quick Docker Setup](#quick-docker-setup-optional) section near the
 > bottom — it's an alternative to the 3 steps above, not a requirement.
@@ -112,6 +113,11 @@ dashboard-api:
 | `dashboard-api.port` | Port the dashboard REST API listens on. |
 | `dashboard-api.api-key` | Bearer token required on every dashboard API request. **Change this before enabling** — the same fail-safe as `resource-pack.host`: while it is still `CHANGE_ME` the plugin logs a warning and refuses to start the dashboard API server, rather than turning the placeholder into a valid token for an API that can create, edit, and delete real items. |
 | `dashboard-api.max-upload-bytes` | Max texture file size accepted through the dashboard's texture upload endpoint. |
+
+`/itemforge reload` re-reads this file, but only the `ai` section takes effect without a restart:
+you can switch provider, change a key or model, or turn AI on and off on a running server. The
+`resource-pack`, `hud`, and `dashboard-api` settings are read once at startup — restart the server
+after changing them.
 
 ### `items.yml`
 
@@ -262,7 +268,7 @@ All subcommands live under a single `/itemforge` command.
 | Command | Description | Permission |
 | --- | --- | --- |
 | `/itemforge give <id>` | Give yourself a custom item, armor piece, or block by id (players only). | `itemforge.admin` |
-| `/itemforge reload` | Reload `items.yml`, `armor.yml`, `recipes.yml`, `blocks.yml`, and `config.yml`, re-register recipes, and rebuild the resource pack. | `itemforge.admin` |
+| `/itemforge reload` | Reload `items.yml`, `armor.yml`, `recipes.yml`, `blocks.yml`, and the `ai` section of `config.yml`, re-register recipes, and rebuild the resource pack. Other `config.yml` settings need a restart. | `itemforge.admin` |
 | `/itemforge list` | List every registered item, armor piece, recipe, and block. | `itemforge.admin` |
 | `/itemforge generate <id> <description...>` | AI-generate a new item from a text description (requires `ai.enabled: true` in `config.yml`). | `itemforge.admin` |
 | `/itemforge analyze [<id>]` | Report balance problems across every item, or just one id. Works without an API key; `ai.enabled: true` adds an AI review on top. | `itemforge.admin` |

@@ -57,6 +57,7 @@ public class ItemForgeCommand implements CommandExecutor, TabCompleter {
     private final CustomBlockRegistry customBlockRegistry;
     private final CustomBlockStackFactory customBlockStackFactory;
     private final CustomBlockLoaderService customBlockLoaderService;
+    private final Runnable settingsReloader;
     private final Plugin plugin;
 
     public ItemForgeCommand(ItemRegistry registry, ItemStackFactory itemStackFactory,
@@ -67,7 +68,7 @@ public class ItemForgeCommand implements CommandExecutor, TabCompleter {
             RecipeRegistrar recipeRegistrar, AiItemGenerationService aiItemGenerationService,
             ItemBalanceAnalysisService balanceAnalysisService,
             CustomBlockRegistry customBlockRegistry, CustomBlockStackFactory customBlockStackFactory,
-            CustomBlockLoaderService customBlockLoaderService, Plugin plugin) {
+            CustomBlockLoaderService customBlockLoaderService, Runnable settingsReloader, Plugin plugin) {
         this.registry = registry;
         this.itemStackFactory = itemStackFactory;
         this.loaderService = loaderService;
@@ -83,6 +84,7 @@ public class ItemForgeCommand implements CommandExecutor, TabCompleter {
         this.customBlockRegistry = customBlockRegistry;
         this.customBlockStackFactory = customBlockStackFactory;
         this.customBlockLoaderService = customBlockLoaderService;
+        this.settingsReloader = settingsReloader;
         this.plugin = plugin;
     }
 
@@ -147,6 +149,7 @@ public class ItemForgeCommand implements CommandExecutor, TabCompleter {
 
     private void handleReload(CommandSender sender) {
         try {
+            settingsReloader.run();
             loaderService.loadAll();
             armorLoaderService.loadAll();
             recipeLoaderService.loadAll();
@@ -163,7 +166,7 @@ public class ItemForgeCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleGenerate(CommandSender sender, String[] args) {
-        if (aiItemGenerationService == null) {
+        if (!aiItemGenerationService.isEnabled()) {
             sender.sendMessage("AI item generation is disabled. Enable it under 'ai:' in config.yml.");
             return;
         }

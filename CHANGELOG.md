@@ -7,6 +7,13 @@ section below is published verbatim as the notes of the matching GitHub Release.
 
 ## [Unreleased]
 
+### Fixed
+
+- `/itemforge reload` now re-reads the `ai` section of `config.yml`. Changing the provider, key or
+  model, or turning AI on or off, used to be silently ignored until the server was restarted, even
+  though the README said `reload` covered `config.yml`. The `resource-pack`, `hud` and
+  `dashboard-api` settings still need a restart, and the README now says so.
+
 ### Documentation
 
 - Added [`docs/showcase/`](docs/showcase/README.md), a walkthrough of the plugin in game and of

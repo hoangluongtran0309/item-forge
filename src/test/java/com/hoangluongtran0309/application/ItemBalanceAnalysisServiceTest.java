@@ -183,6 +183,24 @@ class ItemBalanceAnalysisServiceTest {
     }
 
     @Test
+    void theAiPortCanBeSwappedWithoutRebuildingTheService() {
+        itemRegistry.register(permanentSpeedSword());
+        ItemBalanceAnalysisService service = service(null);
+
+        service.useAiPort(new FakeAiBalanceAnalyzerPort(BalanceReport.of("Overall solid.", List.of())));
+
+        assertTrue(service.isAiEnabled());
+        assertTrue(service.analyzeAll().findings().stream()
+                .anyMatch(finding -> finding.rule().equals(ItemBalanceAnalysisService.AI_SUMMARY_RULE)));
+
+        service.useAiPort(null);
+
+        assertFalse(service.isAiEnabled());
+        assertTrue(service.analyzeAll().findings().stream()
+                .allMatch(finding -> finding.source() == FindingSource.RULE));
+    }
+
+    @Test
     void analyzingOneItemReportsOnlyThatItemButStillSeesTheWholeConfig() {
         itemRegistry.register(permanentSpeedSword());
         itemRegistry.register(new ItemDefinition("void_axe", "NETHERITE_AXE", 2, "Axe", List.of(), List.of()));
