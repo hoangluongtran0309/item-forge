@@ -1,6 +1,6 @@
 # ItemForge in action
 
-Everything on this page was captured from a real run: Paper 1.21.11 started through the
+Everything on this page was captured from real runs: Paper 1.21.11 started through the
 [Quick Docker Setup](../../README.md#quick-docker-setup-optional), the sample "Void Netherite"
 content that ships with the plugin, and the textures from
 [`examples/textures/`](../../examples/textures/). A few extra items (`storm_blade`, `ember_staff`,
@@ -58,7 +58,7 @@ it drops whatever `drop-item-id` names — a vanilla netherite block here.
 ### From the browser to the game
 
 This sword was created, drawn, and given a recipe entirely in the [dashboard](#web-dashboard) —
-the GIFs further down show each step.
+the GIFs further down show the same steps.
 
 ![The Storm Blade held in game](ingame-storm-blade.jpg)
 
@@ -157,8 +157,9 @@ opinion — weigh them accordingly.
 
 ![Balance report grouped by severity](balance-report.jpg)
 
-Type an id and re-run to narrow the rule findings to a single item. Only the results are swapped
-in; the page does not reload.
+Type an id and re-run to narrow the report to a single item. What remains is that item's own
+findings plus any about the config as a whole (`*`). Only the results are swapped in; the page
+does not reload.
 
 ![Narrowing the report to one id and re-running](balance-rerun.gif)
 
@@ -176,9 +177,10 @@ provider fills in the material, name, lore, and abilities for you to review befo
 
 ![Generating an item from a text description](dashboard-ai-generate.gif)
 
-The generated item is ordinary config, so it goes through balance analysis like anything else.
-The staff above came back with a 60-second effect on a 30-second cooldown, which the
-`PERMANENT_EFFECT` rule reports.
+The generated item is ordinary config, so it goes through balance analysis like anything else,
+and what comes back varies from run to run. The staff above got a 10-second effect on a 30-second
+cooldown. An earlier run of the same prompt returned 60 seconds on 30 — the `PERMANENT_EFFECT`
+finding for `ember_staff` in the in-game `/itemforge analyze` screenshot [above](#commands).
 
 ## Console output
 
