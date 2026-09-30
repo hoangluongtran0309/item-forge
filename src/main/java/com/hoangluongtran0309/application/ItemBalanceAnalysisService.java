@@ -86,7 +86,7 @@ public class ItemBalanceAnalysisService {
         List<BalanceFinding> combined = new ArrayList<>(ruleFindings);
         try {
             BalanceReport aiReport = port.analyze(request, ruleFindings);
-            combined.addAll(withRuleDuplicatesRemoved(aiReport.findings(), ruleFindings));
+            combined.addAll(withRuleDuplicatesRemoved(withinScope(aiReport.findings(), request), ruleFindings));
             if (!aiReport.summary().isBlank()) {
                 combined.add(new BalanceFinding(BalanceFinding.WHOLE_CONFIG, BalanceSeverity.INFO, AI_SUMMARY_RULE,
                         aiReport.summary(), "", FindingSource.AI));
@@ -98,6 +98,25 @@ public class ItemBalanceAnalysisService {
         }
 
         return BalanceReport.of(summaryOf(request, combined), combined);
+    }
+
+    /**
+     * Drops AI findings about ids outside a narrowed request.
+     *
+     * <p>The rules honour the scope themselves, but the model is sent the whole config so it can
+     * compare the target against its peers, and it comments on those peers however the request
+     * is worded. Whole-config findings stay: they are about the target as much as anything else.
+     */
+    private static List<BalanceFinding> withinScope(List<BalanceFinding> aiFindings,
+            BalanceAnalysisRequest request) {
+        if (!request.isScoped()) {
+            return aiFindings;
+        }
+
+        return aiFindings.stream()
+                .filter(finding -> finding.targetId().equals(BalanceFinding.WHOLE_CONFIG)
+                        || request.covers(finding.targetId()))
+                .toList();
     }
 
     /**

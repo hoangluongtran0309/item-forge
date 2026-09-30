@@ -13,6 +13,9 @@ section below is published verbatim as the notes of the matching GitHub Release.
   model, or turning AI on or off, used to be silently ignored until the server was restarted, even
   though the README said `reload` covered `config.yml`. The `resource-pack`, `hud` and
   `dashboard-api` settings still need a restart, and the README now says so.
+- Narrowing a balance report to one id (`/itemforge analyze <id>`, or the box on the dashboard's
+  Balance page) now narrows the AI findings too. They used to come back about every item in the
+  config while the rule findings were correctly limited to the one asked about.
 
 ### Documentation
 
