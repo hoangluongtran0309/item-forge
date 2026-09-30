@@ -9,6 +9,9 @@ section below is published verbatim as the notes of the matching GitHub Release.
 
 ## [1.0.1] - 2026-09-30
 
+A bug-fix release. Requirements are unchanged from 1.0.0 and no configuration needs editing to
+upgrade: replace the plugin jar (and the dashboard jar, if you run it) and restart.
+
 ### Fixed
 
 - `/itemforge reload` now re-reads the `ai` section of `config.yml`. Changing the provider, key or
@@ -32,7 +35,7 @@ section below is published verbatim as the notes of the matching GitHub Release.
 
 ### Documentation
 
-- Added [`docs/showcase/`](docs/showcase/README.md), a walkthrough of the plugin in game and of
+- Added [`docs/showcase/`](https://github.com/hoangluongtran0309/item-forge/blob/main/docs/showcase/README.md), a walkthrough of the plugin in game and of
   the dashboard, Texture Studio, balance analysis, and AI generation, in screenshots and GIFs
   captured from a real run.
 
@@ -214,5 +217,6 @@ surfaced at runtime rather than failing silently:
   heavy use and report anything odd via
   [GitHub Issues](https://github.com/hoangluongtran0309/item-forge/issues).
 
-[Unreleased]: https://github.com/hoangluongtran0309/item-forge/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/hoangluongtran0309/item-forge/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/hoangluongtran0309/item-forge/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/hoangluongtran0309/item-forge/releases/tag/v1.0.0
