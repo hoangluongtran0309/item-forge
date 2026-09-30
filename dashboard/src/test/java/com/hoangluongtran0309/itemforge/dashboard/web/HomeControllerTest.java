@@ -1,6 +1,7 @@
 package com.hoangluongtran0309.itemforge.dashboard.web;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -54,6 +55,23 @@ class HomeControllerTest {
         when(armorApiClient.findAll()).thenReturn(List.of());
         when(blockApiClient.findAll()).thenReturn(List.of());
         when(recipeApiClient.findAll()).thenReturn(List.of());
+    }
+
+    @Test
+    @WithMockUser
+    void namesAreShownWithoutMinecraftColourCodes() throws Exception {
+        when(itemApiClient.findAll()).thenReturn(List.of(
+                new ItemJson("void_sword", "NETHERITE_SWORD", 1, "&5Void Netherite Sword", List.of(), List.of())));
+        when(blockApiClient.findAll()).thenReturn(List.of(
+                new BlockJson("void_block", "BASS_GUITAR", 12, "void_block", "GLOWSTONE", "&5Void Netherite Block",
+                        2001, List.of())));
+
+        mockMvc.perform(get("/"))
+                .andExpect(content().string(containsString("Void Netherite Sword")))
+                .andExpect(content().string(containsString("Void Netherite Block")))
+                .andExpect(content().string(not(containsString("&amp;5"))))
+                // The block thumbnail falls back to the first letter of the name, not to "&".
+                .andExpect(content().string(containsString("thumb-fallback hidden\">V<")));
     }
 
     @Test
